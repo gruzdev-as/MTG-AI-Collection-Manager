@@ -1,6 +1,10 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        TORCH_BACKEND: cpu
     expose:
       - "8000"
     environment:

@@ -10,6 +10,7 @@ dependencies = [
     "opencv-python>=4.11.0.86",
     "pandas>=2.3.3",
     "tqdm>=4.67.1",
+    "transformers>=4.57.6",
     "uvicorn[standard]>=0.40.0",
     "websocket-client>=1.9.0",
 ]
@@ -44,3 +45,29 @@ dev = [
     "matplotlib>=3.10.8",
     "matplotlib-inline>=0.2.1",
 ]
+
+[project.optional-dependencies]
+cpu = [
+  "torch>=2.9.1",
+]
+cu128 = [
+  "torch>=2.9.1",
+]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu128" },
+  ],
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
