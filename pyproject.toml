@@ -1,0 +1,46 @@
+[project]
+name = "mtg-fastapi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.128.0",
+    "numpy>=2.4.1",
+    "opencv-python>=4.11.0.86",
+    "pandas>=2.3.3",
+    "tqdm>=4.67.1",
+    "uvicorn[standard]>=0.40.0",
+    "websocket-client>=1.9.0",
+]
+
+[tool.ruff]
+# Enable/disable rules
+select = ["ALL"]
+ignore = ["E501", "T201", "D103", "D107", "D100", "INP001"]  # Optional: Add rules to ignore, e.g., ["E501"]
+
+# Line length
+line-length = 150
+
+# Target Python version
+target-version = "py310"
+
+# Exclude files or directories
+exclude = [
+    "__pycache__",
+    ".git",
+    ".venv",
+    "venv",
+    ".pytype",
+    "build",
+    "dist",
+]
+
+# Show fixable count at the end
+show-fixes = true
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.10.8",
+    "matplotlib-inline>=0.2.1",
+]

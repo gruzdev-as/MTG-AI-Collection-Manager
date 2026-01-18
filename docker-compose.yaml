@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    expose:
+      - "8000"
+    environment:
+      CAMERA_URL: http://192.168.0.106:2222/video
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    

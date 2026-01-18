@@ -1,0 +1,20 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: #111;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#video {
+  width: 640px;
+  height: 480px;
+  object-fit: contain;
+  background: black;
+  border: 1px solid #333;
+}
