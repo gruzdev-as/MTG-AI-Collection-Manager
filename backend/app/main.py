@@ -1,56 +1,60 @@
 import asyncio
-import base64
-import functools
 import os
-import threading
 from contextlib import asynccontextmanager
-from queue import Empty, Queue
+from queue import Queue
 
 import cv2
-import numpy as np
-from fastapi import FastAPI, WebSocket
-from utils.configs import CameraConfig
-from video.capture import CameraCapture
-from video.pipeline import VideoPipeline
-from video.queues import FrameQueues
-from vision.image_processor import ImageProcesser
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-config = CameraConfig(
-    camera_url=os.getenv("CAMERA_URL", "0"),
-    max_motion=10,
-    motion_threshold=2,
-    stable_frames=30,
-)
-
-queue_dict = {
-    "frames_raw": Queue(maxsize=1),
-    "frames_processed": Queue(maxsize=1),
-    "frames_stability": Queue(maxsize=1),
-}
-
-queues = FrameQueues(queue_dict)
-image_processer = ImageProcesser()
-capture = CameraCapture(config, queues)
-pipeline = VideoPipeline(queues=queues, image_processer=image_processer, camera=capture)
+from backend.utils.configs import CameraConfig
+from backend.video.capture import CameraCapture
+from backend.video.pipeline import VideoPipeline
+from backend.video.queues import FrameQueues
+from backend.vision.image_processor import ImageProcesser
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    capture.start()
-    pipeline.start()
+async def lifespan(app: FastAPI) -> None:
+    config = CameraConfig(
+        camera_url=os.getenv("CAMERA_URL", "0"),
+        max_motion=10,
+        motion_threshold=2,
+        stable_frames=30,
+    )
+
+    queue_dict = {
+        "frames_raw": Queue(maxsize=1),
+        "frames_processed": Queue(maxsize=1),
+        "frames_stability": Queue(maxsize=1),
+    }
+
+    app.state.queues = FrameQueues(queue_dict)
+    app.state.image_processer = ImageProcesser()
+    app.state.capture = CameraCapture(config, app.state.queues)
+    app.state.pipeline = VideoPipeline(queues=app.state.queues, image_processer=app.state.image_processer, camera=app.state.capture)
+
+    app.state.capture.start()
+    app.state.pipeline.start()
+
     yield
-    capture.stop()
-    pipeline.stop()
+
+    app.state.capture.stop()
+    app.state.pipeline.stop()
 
 
 app = FastAPI(lifespan=lifespan)
 
 
 @app.websocket("/ws/stream")
-async def stream1(websocket: WebSocket) -> np.ndarray:
+async def stream1(websocket: WebSocket) -> None:
     """Streaming processed video frames to frontend."""
     await websocket.accept()
-    while True:
-        frame = queues.get("frames_processed")
-        _, frame = cv2.imencode(".jpg", frame)
-        await websocket.send_bytes(frame.tobytes())
+    try:
+        while True:
+            frame = await asyncio.to_thread(websocket.app.state.queues.get, "frames_processed")
+            _, frame = cv2.imencode(".jpg", frame)
+            await websocket.send_bytes(frame.tobytes())
+    except WebSocketDisconnect:
+        print("Client disconnected from WebSocket stream.")
+    except RuntimeError as e:
+        print(f"Error streaming video: {e}")
