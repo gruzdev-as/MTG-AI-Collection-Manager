@@ -1,10 +1,11 @@
+import queue
 import threading
 
 import cv2
-from vision.image_processor import ImageProcesser
 
-from video.capture import CameraCapture
-from video.queues import FrameQueues
+from backend.video.capture import CameraCapture
+from backend.video.queues import FrameQueues
+from backend.vision.image_processor import ImageProcesser
 
 
 class VideoPipeline:
@@ -31,8 +32,10 @@ class VideoPipeline:
     def _loop(self) -> None:
         """Run the main data pipeline endlessly."""
         while self.running:
-
-            frame = self.queues.get("frames_raw")
+            try:
+                frame = self.queues.get("frames_raw", timeout=1.0)
+            except queue.Empty:
+                continue
 
             processed, contours = self.image_processer.find_big_contours(frame)
             stability = self.camera.similarity_score
@@ -42,19 +45,21 @@ class VideoPipeline:
                 self.camera.pause_event.clear()
                 for contour in contours:
                     crop = self.image_processer.crop_warp_image_from_contour(frame, contour)
+                    # TODO @gruzdev-as: Later will be sent to embedding worker
                 self.camera.camera_stable_flag = False
                 self.camera.stable_counter = 0
                 self.camera.pause_event.set()
 
+            # TODO @gruzdev-as: Remove it later
             cv2.putText(
-                img = processed,
-                text = f"{is_stable}:{stability:.3f}",
-                org = (processed.shape[1] // 4, processed.shape[0] // 2),
-                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-                fontScale = 2,
-                color = (0, 0, 255) if not is_stable else (0, 255, 0),
-                thickness = 3,
-                lineType = cv2.LINE_AA,
+                img=processed,
+                text=f"{is_stable}:{stability:.3f}",
+                org=(processed.shape[1] // 4, processed.shape[0] // 2),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=2,
+                color=(0, 0, 255) if not is_stable else (0, 255, 0),
+                thickness=3,
+                lineType=cv2.LINE_AA,
             )
 
             self.queues.put("frames_processed", processed)

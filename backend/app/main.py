@@ -31,7 +31,11 @@ async def lifespan(app: FastAPI) -> None:
     app.state.queues = FrameQueues(queue_dict)
     app.state.image_processer = ImageProcesser()
     app.state.capture = CameraCapture(config, app.state.queues)
-    app.state.pipeline = VideoPipeline(queues=app.state.queues, image_processer=app.state.image_processer, camera=app.state.capture)
+    app.state.pipeline = VideoPipeline(
+        queues=app.state.queues,
+        image_processer=app.state.image_processer,
+        camera=app.state.capture,
+    )
 
     app.state.capture.start()
     app.state.pipeline.start()

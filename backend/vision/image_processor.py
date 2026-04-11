@@ -1,6 +1,3 @@
-import threading
-import time
-
 import cv2
 import numpy as np
 
@@ -19,9 +16,9 @@ class ImageProcesser:
         Args:
             frame (np.array): The frame captured from the camera on which contours are detected.
             epsilon_factor (float, optional): Factor for approximating arcs in contours.
-                A lower value results in a more accurate approximation. Defaults to 0.02.
+                A lower value results in a more accurate approximation. Defaults to 0.05.
             min_area (int, optional): Minimum area for contours to be kept. This is
-                empirically determined to filter out smaller, irrelevant contours. Defaults to 2000.
+                empirically determined to filter out smaller, irrelevant contours. Defaults to 50,000.
 
         Returns:
             Tuple[np.ndarray, list[cv2.typing.MatLike]]: A tuple where:
@@ -49,6 +46,7 @@ class ImageProcesser:
             contours_to_keep.append(contour)
 
         contour_image = frame.copy()
+        # TODO @gruzdev-as: Should draw contours_to_keep instead of all contours for the final result
         cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 15)
 
         return contour_image, contours_to_keep
@@ -74,12 +72,12 @@ class ImageProcesser:
         """Crops a specified contour from an image and applies perspective correction.
 
         Args:
-            image (np.ndarray): _description_
-            contour (np.ndarray): _description_
-            target_size (tuple[int, int] | None, optional): _description_. Defaults to None.
+            image (np.ndarray): Original image from which to crop.
+            contour (cv2.typing.MatLike): Contour representing the crop area.
+            target_size (tuple[int, int] | None, optional): Desired size for the output image. Defaults to None.
 
         Returns:
-            np.ndarray: _description_
+            np.ndarray: Cropped and warped image.
 
         """
         epsilon = 0.05 * cv2.arcLength(contour, closed=True)

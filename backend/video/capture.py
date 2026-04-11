@@ -1,11 +1,12 @@
+import queue
 import threading
 import time
 
 import cv2
 import numpy as np
-from utils.configs import CameraConfig
 
-from video.queues import FrameQueues
+from backend.utils.configs import CameraConfig
+from backend.video.queues import FrameQueues
 
 
 class CameraCapture:
@@ -13,7 +14,7 @@ class CameraCapture:
 
     def __init__(
         self,
-        camera_config:CameraConfig,
+        camera_config: CameraConfig,
         queues: FrameQueues,
         reconnect_delay: float = 2.0,
     ) -> None:
@@ -58,7 +59,7 @@ class CameraCapture:
     def _main_loop(self) -> None:
         """Capture frames endlessly."""
         while self.running:
-            self.pause_event.set()
+            self.pause_event.wait()
             if self.cap is None:
                 self.cap = self._connect()
                 if self.cap is None:
@@ -80,9 +81,12 @@ class CameraCapture:
         prev_gray = None
         self.stable_counter = 0
         while self.running:
-            self.pause_event.set()
+            self.pause_event.wait()
 
-            frame = self.queues.get("frames_stability")
+            try:
+                frame = self.queues.get("frames_stability", timeout=1.0)
+            except queue.Empty:
+                continue
 
             gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
             gray = cv2.resize(gray, None, fx=0.1, fy=0.1)
