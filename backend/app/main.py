@@ -55,7 +55,8 @@ async def stream1(websocket: WebSocket) -> None:
     await websocket.accept()
     try:
         while True:
-            frame = await asyncio.to_thread(websocket.app.state.queues.get, "frames_processed")
+            frame_data = await asyncio.to_thread(websocket.app.state.queues.get, "frames_processed")
+            frame = frame_data.image
             _, frame = cv2.imencode(".jpg", frame)
             await websocket.send_bytes(frame.tobytes())
     except WebSocketDisconnect:

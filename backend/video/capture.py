@@ -1,11 +1,12 @@
 import queue
 import threading
 import time
+import uuid
 
 import cv2
 import numpy as np
 
-from backend.utils.configs import CameraConfig
+from backend.utils.configs import CameraConfig, RawFrame
 from backend.video.queues import FrameQueues
 
 
@@ -73,8 +74,16 @@ class CameraCapture:
                 time.sleep(self.reconnect_delay)
                 continue
 
-            self.queues.put("frames_raw", frame.copy())
-            self.queues.put("frames_stability", frame.copy())
+            raw_frame = RawFrame(
+                frame_id=str(uuid.uuid4()),
+                timestamp=time.time(),
+                image=frame,
+                width=frame.shape[1],
+                height=frame.shape[0],
+            )
+
+            self.queues.put("frames_raw", raw_frame)
+            self.queues.put("frames_stability", raw_frame)
 
     def _is_camera_stable(self) -> None:
         """Check if camera is stable and the capturing can be start."""
@@ -84,7 +93,8 @@ class CameraCapture:
             self.pause_event.wait()
 
             try:
-                frame = self.queues.get("frames_stability", timeout=1.0)
+                raw_frame = self.queues.get("frames_stability", timeout=1.0)
+                frame = raw_frame.image
             except queue.Empty:
                 continue
 

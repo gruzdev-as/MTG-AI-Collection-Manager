@@ -1,8 +1,11 @@
 import queue
 import threading
+import time
+import uuid
 
 import cv2
 
+from backend.utils.configs import CropTask, RawFrame
 from backend.video.capture import CameraCapture
 from backend.video.queues import FrameQueues
 from backend.vision.image_processor import ImageProcesser
@@ -33,19 +36,27 @@ class VideoPipeline:
         """Run the main data pipeline endlessly."""
         while self.running:
             try:
-                frame = self.queues.get("frames_raw", timeout=1.0)
+                raw_frame = self.queues.get("frames_raw", timeout=1.0)
             except queue.Empty:
                 continue
 
-            processed, contours = self.image_processer.find_big_contours(frame)
+            processed, contours = self.image_processer.find_big_contours(raw_frame.image)
             stability = self.camera.similarity_score
             is_stable = self.camera.camera_stable_flag
 
             if is_stable:
                 self.camera.pause_event.clear()
                 for contour in contours:
-                    crop = self.image_processer.crop_warp_image_from_contour(frame, contour)
-                    # TODO @gruzdev-as: Later will be sent to embedding worker
+                    crop = self.image_processer.crop_warp_image_from_contour(raw_frame.image, contour)
+
+                    crop_task = CropTask(
+                        track_id=str(uuid.uuid4()),
+                        frame_id=raw_frame.frame_id,
+                        image_ref=f"/dev/shm/crop_{uuid.uuid4()}.jpg",
+                        created_at=time.time(),
+                    )
+                    cv2.imwrite(crop_task.image_ref, crop)
+
                 self.camera.camera_stable_flag = False
                 self.camera.stable_counter = 0
                 self.camera.pause_event.set()
@@ -61,5 +72,12 @@ class VideoPipeline:
                 thickness=3,
                 lineType=cv2.LINE_AA,
             )
+            processed_frame = RawFrame(
+                frame_id=raw_frame.frame_id,
+                timestamp=raw_frame.timestamp,
+                image=processed,
+                width=processed.shape[1],
+                height=processed.shape[0],
+            )
 
-            self.queues.put("frames_processed", processed)
+            self.queues.put("frames_processed", processed_frame)

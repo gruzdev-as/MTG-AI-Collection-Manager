@@ -8,7 +8,7 @@ services:
     expose:
       - "8000"
     environment:
-      CAMERA_URL: http://192.168.0.106:2222/video
+      CAMERA_URL: http://192.168.0.104:2222/video
 
   frontend:
     build: ./frontend
@@ -16,4 +16,3 @@ services:
       - "80:80"
     depends_on:
       - backend
-    
