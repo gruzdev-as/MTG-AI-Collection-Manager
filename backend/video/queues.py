@@ -1,6 +1,6 @@
 from queue import Queue
 
-from backend.utils.configs import RawFrame
+from common.configs.data_schemas import RawFrame
 
 
 class FrameQueues:

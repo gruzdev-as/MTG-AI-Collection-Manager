@@ -9,7 +9,7 @@ class ImageProcesser:
         self,
         frame: np.ndarray,
         epsilon_factor: float = 0.05,
-        min_area: int = 50_000,
+        min_area: int = 100_000,
     ) -> tuple[np.ndarray, list[cv2.typing.MatLike]]:
         """Detect contours on an image using OpenCV and keeps only those that are rectangular-like.
 
@@ -26,13 +26,19 @@ class ImageProcesser:
                 - The second element is a list of contours that match the specified criteria.
 
         """
+
+        def _calculate_nonzero_ratio(thresh: np.ndarray) -> float:
+            non_zero_pixels = cv2.countNonZero(thresh)
+            total_pixels = thresh.shape[0] * thresh.shape[1]
+            return non_zero_pixels / total_pixels
+
         gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         blurred = cv2.GaussianBlur(gray, (15, 15), 0)
+        _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-        if np.mean(gray) < 127:
+        nonzero_ratio = _calculate_nonzero_ratio(thresh)
+        if nonzero_ratio > 0.5:
             _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        else:
-            _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours_to_keep = []
@@ -46,8 +52,7 @@ class ImageProcesser:
             contours_to_keep.append(contour)
 
         contour_image = frame.copy()
-        # TODO @gruzdev-as: Should draw contours_to_keep instead of all contours for the final result
-        cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 15)
+        cv2.drawContours(contour_image, contours_to_keep, -1, (0, 255, 0), 15)
 
         return contour_image, contours_to_keep
 

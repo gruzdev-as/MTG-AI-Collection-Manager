@@ -6,8 +6,8 @@ import uuid
 import cv2
 import numpy as np
 
-from backend.utils.configs import CameraConfig, RawFrame
 from backend.video.queues import FrameQueues
+from common.configs.data_schemas import CameraConfig, RawFrame
 
 
 class CameraCapture:

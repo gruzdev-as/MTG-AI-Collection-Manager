@@ -2,13 +2,17 @@ import queue
 import threading
 import time
 import uuid
+from dataclasses import asdict
 
 import cv2
+import redis
 
-from backend.utils.configs import CropTask, RawFrame
 from backend.video.capture import CameraCapture
 from backend.video.queues import FrameQueues
 from backend.vision.image_processor import ImageProcesser
+from common.configs.data_schemas import CropTask, RawFrame, RedisConfig
+
+r = redis.Redis(**asdict(RedisConfig()))
 
 
 class VideoPipeline:
@@ -41,7 +45,6 @@ class VideoPipeline:
                 continue
 
             processed, contours = self.image_processer.find_big_contours(raw_frame.image)
-            stability = self.camera.similarity_score
             is_stable = self.camera.camera_stable_flag
 
             if is_stable:
@@ -61,17 +64,6 @@ class VideoPipeline:
                 self.camera.stable_counter = 0
                 self.camera.pause_event.set()
 
-            # TODO @gruzdev-as: Remove it later
-            cv2.putText(
-                img=processed,
-                text=f"{is_stable}:{stability:.3f}",
-                org=(processed.shape[1] // 4, processed.shape[0] // 2),
-                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                fontScale=2,
-                color=(0, 0, 255) if not is_stable else (0, 255, 0),
-                thickness=3,
-                lineType=cv2.LINE_AA,
-            )
             processed_frame = RawFrame(
                 frame_id=raw_frame.frame_id,
                 timestamp=raw_frame.timestamp,
