@@ -8,7 +8,7 @@ class EmbeddingTask(BaseModel):
     """Crop Redis Task to process."""
 
     frame_id: str
-    image_ref: str
+    image_bytes: bytes
     created_at: float = time.time()
 
 

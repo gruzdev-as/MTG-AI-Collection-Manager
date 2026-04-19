@@ -1,4 +1,3 @@
-import tempfile
 import time
 import uuid
 from typing import Annotated
@@ -8,6 +7,7 @@ import numpy as np
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 
+from backend.vision.image_processor import ImageProcesser
 from common.configs.constants import REDIS
 from common.configs.data_schemas import EmbeddingTask
 
@@ -24,14 +24,11 @@ async def scan_card(image: Annotated[UploadFile, File()]) -> JSONResponse:
     if frame is None:
         return JSONResponse(status_code=400, content={"error": "Invalid image"})
 
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-        cv2.imwrite(tmp_file.name, frame)
-        tmp_file.flush()
-        tmp_file.seek(0)
+    crop = ImageProcesser.process_image(frame)
 
     embedding_task = EmbeddingTask(
         frame_id=str(uuid.uuid4()),
-        image_ref=tmp_file.name,
+        image_bytes=crop.tobytes(),
         created_at=time.time(),
     )
 
