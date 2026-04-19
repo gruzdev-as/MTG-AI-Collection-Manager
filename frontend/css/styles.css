@@ -7,6 +7,7 @@
   --accent: #3b82f6;
   --accent-glow: rgba(59, 130, 246, 0.4);
   --danger: #ef4444;
+  --danger-hover: #dc2626;
   --success: #22c55e;
   --radius: 16px;
 }
@@ -39,6 +40,169 @@ html, body {
   display: flex;
 }
 
+/* ── Home View & Table ── */
+#home-view {
+  background: var(--bg);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+}
+
+.home-header {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: radial-gradient(circle at top, rgba(30,58,138,0.2) 0%, transparent 80%);
+}
+
+.home-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+
+.home-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.large-btn {
+  width: 100%;
+  max-width: 320px;
+  justify-content: center;
+  padding: 1.1rem !important;
+  font-size: 1.1rem !important;
+  margin: 0 auto;
+}
+
+.table-section {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+.table-container {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.badge {
+  background: var(--accent);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 800px; /* Force scroll on small screens */
+}
+
+th {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+
+td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+
+/* Table Inputs */
+input[type="text"], input[type="number"], select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+select option { background: var(--bg); color: var(--text); }
+
+/* Toggle Switch */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: .3s; border-radius: 24px; border: 1px solid var(--border);
+}
+.slider:before {
+  position: absolute; content: ""; height: 16px; width: 16px;
+  left: 3px; bottom: 3px; background-color: var(--text-muted);
+  transition: .3s; border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--accent); border-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+
+.btn-danger {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid transparent; padding: 0.5rem;
+  border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+  transition: all 0.2s; font-size: 0.85rem; font-family: inherit; font-weight: 500;
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1); color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.empty-state {
+  text-align: center; padding: 4rem 2rem; color: var(--text-muted);
+}
+.empty-state svg { margin-bottom: 1rem; opacity: 0.5; }
+.empty-state p { margin: 0; font-weight: 500; font-size: 1.1rem; color: var(--text); }
+.empty-state .muted { font-size: 0.9rem; display: block; margin-top: 0.5rem; }
+
+
 /* ── Camera View ── */
 #camera-view {
   background: #000;
@@ -66,7 +230,6 @@ html, body {
   pointer-events: none;
 }
 
-/* ── HUD ── */
 .camera-hud-top {
   position: absolute;
   top: 0;
@@ -81,27 +244,14 @@ html, body {
   z-index: 10;
 }
 
-.hud-badge {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-}
-
 .icon-btn {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   color: var(--text);
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -115,7 +265,6 @@ html, body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ── Guide Text ── */
 .guide-text {
   position: absolute;
   bottom: 1.5rem;
@@ -132,10 +281,8 @@ html, body {
   white-space: nowrap;
   z-index: 10;
   border: 1px solid var(--border);
-  transition: opacity 0.3s;
 }
 
-/* ── Bottom Controls ── */
 .controls-bar {
   display: flex;
   justify-content: center;
@@ -156,7 +303,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .capture-btn-ring {
@@ -184,7 +330,6 @@ html, body {
   border-color: var(--accent);
 }
 
-/* ── Flash Overlay ── */
 .flash-overlay {
   position: fixed;
   inset: 0;
@@ -232,6 +377,7 @@ html, body {
 .action-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.75rem;
   border-radius: 14px;
@@ -298,7 +444,6 @@ html, body {
   margin-bottom: 2rem;
 }
 
-/* ── Sending state ── */
 .action-btn.sending {
   pointer-events: none;
   opacity: 0.7;
@@ -309,11 +454,7 @@ html, body {
 }
 
 .spinner {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+  border-radius: 50%; animation: spin 0.6s linear infinite;
 }
