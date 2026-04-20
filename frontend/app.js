@@ -34,6 +34,7 @@ const cardsBody = document.getElementById("cards-body");
 const emptyState = document.getElementById("empty-state");
 const cardsTable = document.getElementById("cards-table");
 const cardCountBadge = document.getElementById("card-count");
+const tableFooter = document.getElementById("table-footer");
 
 // ── MTG card aspect ratio (standard: 63mm × 88mm) ──
 const CARD_ASPECT = 63 / 88;
@@ -63,9 +64,11 @@ function updateTableState() {
   if (cardCount === 0) {
     emptyState.style.display = "block";
     cardsTable.style.display = "none";
+    if (tableFooter) tableFooter.style.display = "none";
   } else {
     emptyState.style.display = "none";
     cardsTable.style.display = "table";
+    if (tableFooter) tableFooter.style.display = "flex";
   }
 }
 
