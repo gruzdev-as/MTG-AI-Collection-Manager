@@ -9,13 +9,17 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./ 
 
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN uv sync --frozen --no-dev --extra=${TORCH_BACKEND}
+RUN uv sync --frozen --no-dev --extra=${TORCH_BACKEND} --extra=inference
 
 COPY inference/ inference/
+COPY common/ common/
 WORKDIR /app
 
-CMD ["uv", "run", "python", "-m", "inference.main"]
+CMD ["uv", "run", "--no-sync", "python", "-m", "inference.main"]

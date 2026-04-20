@@ -17,7 +17,7 @@ class ImageProcesser:
     def find_card_contour(
         frame: np.ndarray,
         epsilon_factor: float = 0.05,
-        min_area_ratio: float = 0.65,
+        min_area_ratio: float = 0.5,
     ) -> cv2.typing.MatLike:
         """Detect card contour on an image and keep only those that are rectangular-like and cover most of the image.
 
@@ -26,7 +26,7 @@ class ImageProcesser:
             epsilon_factor (float, optional): Factor for approximating arcs in contours.
                 A lower value results in a more accurate approximation. Defaults to 0.05.
             min_area_ratio (float, optional): Minimum area for contours to be kept. This is
-                empirically determined to filter out smaller, irrelevant contours. Defaults to 0.85.
+                empirically determined to filter out smaller, irrelevant contours. Defaults to 0.5.
 
         Returns:
             cv2.typing.MatLike: The contour of the card.
@@ -41,7 +41,7 @@ class ImageProcesser:
         image_area = frame.shape[0] * frame.shape[1]
         min_area = image_area * min_area_ratio
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (15, 15), 0)
         _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 

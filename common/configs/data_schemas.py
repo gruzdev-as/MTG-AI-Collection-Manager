@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 
 from pydantic import BaseModel
 
@@ -12,10 +11,12 @@ class EmbeddingTask(BaseModel):
     created_at: float = time.time()
 
 
-@dataclass(frozen=True)
-class RedisConfig:
-    """Configure Redis connection."""
+class InferenceResult(BaseModel):
+    """Final embedding inference result format returned to the backend."""
 
-    host: str = "redis"
-    port: int = 6379
-    decode_responses: bool = True
+    frame_id: str
+    card_number: str | None = None
+    card_set: str | None = None
+    card_name: str | None = None
+    card_language: str | None = None
+    card_side: str | None = None

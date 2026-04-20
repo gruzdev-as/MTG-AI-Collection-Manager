@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y \
 
 COPY pyproject.toml uv.lock ./ 
 
-RUN uv sync --frozen --no-dev --extra=${TORCH_BACKEND}
+RUN uv sync --frozen --no-dev
 
 COPY backend/ backend/
 COPY common/ common/
 WORKDIR /app
 
-CMD ["uv", "run", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--no-sync", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
