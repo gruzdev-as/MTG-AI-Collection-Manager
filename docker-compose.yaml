@@ -1,14 +1,14 @@
 services:
   backend:
+    environment:
+      - PYTHONUNBUFFERED=1
     build:
       context: .
       dockerfile: backend/Dockerfile
-      args:
-        TORCH_BACKEND: cpu
     expose:
       - "8000"
-    environment:
-      CAMERA_URL: http://192.168.0.104:2222/video
+    volumes:
+      - ./data:/app/data
 
   frontend:
     build: ./frontend
@@ -17,9 +17,24 @@ services:
       - "443:443"
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/usr/share/nginx/html
 
   redis:
     image: redis:7
     container_name: redis
     ports:
       - "6379:6379"
+
+  inference:
+    environment:
+      - PYTHONUNBUFFERED=1
+    build:
+      context: .
+      dockerfile: inference/Dockerfile
+      args:
+        TORCH_BACKEND: cpu
+    depends_on:
+      - redis
+    volumes:
+      - ./data:/app/inference/data

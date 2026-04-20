@@ -44,7 +44,7 @@ function showView(view) {
     v.classList.remove("active")
   );
   view.classList.add("active");
-  
+
   // If moving to the home view, completely stop the camera to save battery
   if (view === homeView && currentStream) {
     stopCamera();
@@ -52,7 +52,7 @@ function showView(view) {
 }
 
 // ── Table Management ──
-window.dropRow = function(button) {
+window.dropRow = function (button) {
   button.closest("tr").remove();
   cardCount--;
   updateTableState();
@@ -71,7 +71,7 @@ function updateTableState() {
 
 function addCardRow(name = "", number = "", set = "", language = "EN", isFoil = false, condition = "NM") {
   const tr = document.createElement("tr");
-  
+
   tr.innerHTML = `
     <td><input type="text" value="${name}" placeholder="Name"></td>
     <td><input type="number" value="${number}" placeholder="#"></td>
@@ -99,11 +99,11 @@ function addCardRow(name = "", number = "", set = "", language = "EN", isFoil = 
     </td>
     <td>
       <select>
-        <option value="NM" ${condition === 'NM' ? 'selected' : ''}>Near Mint (NM)</option>
-        <option value="SP" ${condition === 'SP' ? 'selected' : ''}>Slightly Played (SP)</option>
-        <option value="MP" ${condition === 'MP' ? 'selected' : ''}>Moderately Played (MP)</option>
-        <option value="HP" ${condition === 'HP' ? 'selected' : ''}>Heavily Played (HP)</option>
-        <option value="D" ${condition === 'D' ? 'selected' : ''}>Damaged (D)</option>
+        <option value="NM" ${condition === 'NM' ? 'selected' : ''}>NM</option>
+        <option value="SP" ${condition === 'SP' ? 'selected' : ''}>SP</option>
+        <option value="MP" ${condition === 'MP' ? 'selected' : ''}>MP</option>
+        <option value="HP" ${condition === 'HP' ? 'selected' : ''}>HP</option>
+        <option value="D" ${condition === 'D' ? 'selected' : ''}>D</option>
       </select>
     </td>
     <td>
@@ -113,10 +113,11 @@ function addCardRow(name = "", number = "", set = "", language = "EN", isFoil = 
       </button>
     </td>
   `;
-  
+
   cardsBody.prepend(tr);
   cardCount++;
   updateTableState();
+  return tr;
 }
 
 // ── Camera Management ──
@@ -327,11 +328,16 @@ async function sendPhoto() {
 
     const result = await response.json();
     console.log("Server response:", result);
-    
+
     // Add a new row to the table for each card found in the crop (normally 1)
     const count = result.cards_found || 1;
     for (let i = 0; i < count; i++) {
-        addCardRow(`Detecting...`);
+      const rowElement = addCardRow(`Detecting...`);
+
+      // Start polling for the result using the frame_id
+      if (result.frame_id) {
+        pollForResult(result.frame_id, rowElement);
+      }
     }
 
     // Return to camera view for the next scan
@@ -345,6 +351,37 @@ async function sendPhoto() {
     sendBtn.classList.remove("sending");
     sendBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg> Send';
   }
+}
+
+function pollForResult(frameId, rowElement) {
+  // Check every 1 second for inference result
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/result/${frameId}`);
+      if (res.status === 200) {
+        clearInterval(interval);
+        const data = await res.json();
+
+        // Update the row with the actual data from the AI
+        const inputs = rowElement.querySelectorAll('input[type="text"], input[type="number"]');
+        if (inputs.length >= 3) {
+          inputs[0].value = data.card_name || "";
+          inputs[1].value = data.card_number || "";
+          inputs[2].value = data.card_set || "";
+        }
+
+        console.log("Card successfully detected:", data);
+      } else if (res.status === 202) {
+        // Still processing, continue polling...
+      } else {
+        clearInterval(interval);
+        console.error("Error polling result:", res.status);
+      }
+    } catch (err) {
+      clearInterval(interval);
+      console.error("Polling fetch error:", err);
+    }
+  }, 1000);
 }
 
 // ── Event Listeners ──
