@@ -20,3 +20,13 @@ class InferenceResult(BaseModel):
     card_name: str | None = None
     card_language: str | None = None
     card_side: str | None = None
+
+
+class AddedCard(BaseModel):
+    """Card added to the database."""
+
+    card_number: str | None = None
+    card_set: str | None = None
+    card_name: str | None = None
+    card_language: str | None = None
+    card_side: str | None = None

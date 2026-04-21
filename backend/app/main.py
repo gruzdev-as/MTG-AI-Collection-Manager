@@ -5,20 +5,21 @@ from typing import Annotated
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, UploadFile
+from fastapi import APIRouter, FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 
 from backend.vision.image_processor import ImageProcesser
 from common.configs.constants import REDIS, StreamConfig
-from common.configs.data_schemas import EmbeddingTask
+from common.configs.data_schemas import AddedCard, EmbeddingTask
 
 app = FastAPI()
+router = APIRouter(prefix="/api")
 
 # Instantiate the stream config globally
 stream_config = StreamConfig()
 
 
-@app.post("/api/scan")
+@router.post("/scan")
 async def scan_card(image: Annotated[UploadFile, File()]) -> JSONResponse:
     """Receive a card photo from the frontend, detect contours, crop cards, and push to Redis."""
     contents = await image.read()
@@ -46,7 +47,7 @@ async def scan_card(image: Annotated[UploadFile, File()]) -> JSONResponse:
     )
 
 
-@app.get("/api/result/{frame_id}")
+@router.get("/result/{frame_id}")
 async def get_scan_result(frame_id: str) -> JSONResponse:
     result = REDIS.get(f"result:{frame_id}")
     print(frame_id)
@@ -55,3 +56,12 @@ async def get_scan_result(frame_id: str) -> JSONResponse:
         return JSONResponse(status_code=200, content=json.loads(result))
 
     return JSONResponse(status_code=202, content={"status": "processing"})
+
+
+@router.post("/collection/add")
+async def add_cards_to_collection(cards: list[AddedCard]) -> JSONResponse:
+    print(f"Received {len(cards)} cards for database insertion.")
+    return JSONResponse(status_code=200, content={"status": "success", "inserted": len(cards)})
+
+
+app.include_router(router)
