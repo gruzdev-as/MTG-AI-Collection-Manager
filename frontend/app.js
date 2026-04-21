@@ -406,5 +406,51 @@ sendBtn.addEventListener("click", sendPhoto);
 retryBtn.addEventListener("click", startCamera);
 backHomeErrBtn.addEventListener("click", () => showView(homeView));
 
+const uploadBtn = document.getElementById("upload-db-btn");
+if (uploadBtn) {
+  uploadBtn.addEventListener("click", async () => {
+    const payload = [];
+    const rows = document.querySelectorAll("#cards-body tr");
+    
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll("input, select");
+      if (inputs.length >= 6) {
+        payload.push({
+          card_name: inputs[0].value,
+          card_number: inputs[1].value,
+          card_set: inputs[2].value,
+          card_language: inputs[3].value,
+          card_side: inputs[4].checked ? "foil" : "normal",
+          card_condition: inputs[5].value
+        });
+      }
+    });
+
+    if (payload.length === 0) return;
+
+    try {
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+      
+      const response = await fetch("/api/collection/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        alert("Collection synced to DB successfully!");
+      } else {
+        alert(`Failed to add cards: ${response.status}`);
+      }
+    } catch (err) {
+      alert(`Error uploading: ${err.message}`);
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Upload to database';
+    }
+  });
+}
+
 // ── Init ──
 updateTableState(); // Start on home view
