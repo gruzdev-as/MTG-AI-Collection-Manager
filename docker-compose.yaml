@@ -1,14 +1,15 @@
 services:
   backend:
-    environment:
-      - PYTHONUNBUFFERED=1
     build:
       context: .
       dockerfile: backend/Dockerfile
-    expose:
-      - "8000"
+    environment:
+      - PYTHONUNBUFFERED=1
     volumes:
-      - ./data:/app/data
+      - .volumes/data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -16,25 +17,53 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     volumes:
       - ./frontend:/usr/share/nginx/html
 
-  redis:
-    image: redis:7
-    container_name: redis
-    ports:
-      - "6379:6379"
-
   inference:
-    environment:
-      - PYTHONUNBUFFERED=1
     build:
       context: .
       dockerfile: inference/Dockerfile
       args:
         TORCH_BACKEND: cpu
-    depends_on:
-      - redis
+    environment:
+      - PYTHONUNBUFFERED=1
     volumes:
-      - ./data:/app/inference/data
+      - .volumes/data:/app/inference/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16.2-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:5432" # For local access
+    volumes:
+      - .volumes/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
