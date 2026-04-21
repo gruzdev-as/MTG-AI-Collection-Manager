@@ -15,18 +15,19 @@ class InferenceResult(BaseModel):
     """Final embedding inference result format returned to the backend."""
 
     frame_id: str
-    card_number: str | None = None
+    card_number: int | None = None
     card_set: str | None = None
     card_name: str | None = None
     card_language: str | None = None
-    card_side: str | None = None
+    is_foil: bool = False
 
 
 class AddedCard(BaseModel):
     """Card added to the database."""
 
-    card_number: str | None = None
+    card_number: int | None = None
     card_set: str | None = None
     card_name: str | None = None
     card_language: str | None = None
-    card_side: str | None = None
+    is_foil: bool = False
+    card_condition: str | None = None

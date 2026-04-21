@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN uv sync --frozen --no-dev --extra=${TORCH_BACKEND} --extra=inference
+RUN uv sync --frozen --no-dev --extra=${TORCH_BACKEND} --group=inference
 
 COPY inference/ inference/
 COPY common/ common/

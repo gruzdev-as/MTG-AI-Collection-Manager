@@ -417,10 +417,10 @@ if (uploadBtn) {
       if (inputs.length >= 6) {
         payload.push({
           card_name: inputs[0].value,
-          card_number: inputs[1].value,
+          card_number: parseInt(inputs[1].value) || 0,
           card_set: inputs[2].value,
           card_language: inputs[3].value,
-          card_side: inputs[4].checked ? "foil" : "normal",
+          is_foil: inputs[4].checked,
           card_condition: inputs[5].value
         });
       }

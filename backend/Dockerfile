@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY pyproject.toml uv.lock ./ 
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --group backend
 
 COPY backend/ backend/
 COPY common/ common/

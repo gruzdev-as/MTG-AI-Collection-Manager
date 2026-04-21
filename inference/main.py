@@ -7,8 +7,10 @@ import cv2
 import numpy as np
 import redis
 
-from common.configs.constants import REDIS, HNSWConfig, InferenceConfig, StreamConfig
-from common.configs.data_schemas import EmbeddingTask, InferenceResult
+from common.ml.config import HNSWConfig, InferenceConfig
+from common.redis.client import REDIS
+from common.redis.config import StreamConfig
+from common.schemas.api import EmbeddingTask, InferenceResult
 
 from .embedding_generation import EmbeddingGenerator
 from .search import HNSWSearchTool

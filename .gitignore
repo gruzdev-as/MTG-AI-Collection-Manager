@@ -9,3 +9,10 @@ wheels/
 # Virtual environments
 .venv
 .env
+.volumes/
+
+# Data
+data/
+
+# IDE
+.vscode/

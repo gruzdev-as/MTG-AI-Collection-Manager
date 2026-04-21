@@ -1,18 +1,34 @@
 import json
 import time
 import uuid
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 import cv2
 import numpy as np
-from fastapi import APIRouter, FastAPI, File, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.sql import queries
 from backend.vision.image_processor import ImageProcesser
-from common.configs.constants import REDIS, StreamConfig
-from common.configs.data_schemas import AddedCard, EmbeddingTask
+from common.db.models import Base
+from common.db.session import engine, get_db
+from common.redis.client import REDIS
+from common.redis.config import StreamConfig
+from common.schemas.api import AddedCard, EmbeddingTask
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifecycle events for the FastAPI application."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 router = APIRouter(prefix="/api")
 
 # Instantiate the stream config globally
@@ -50,7 +66,6 @@ async def scan_card(image: Annotated[UploadFile, File()]) -> JSONResponse:
 @router.get("/result/{frame_id}")
 async def get_scan_result(frame_id: str) -> JSONResponse:
     result = REDIS.get(f"result:{frame_id}")
-    print(frame_id)
     if result:
         REDIS.delete(f"result:{frame_id}")
         return JSONResponse(status_code=200, content=json.loads(result))
@@ -59,9 +74,11 @@ async def get_scan_result(frame_id: str) -> JSONResponse:
 
 
 @router.post("/collection/add")
-async def add_cards_to_collection(cards: list[AddedCard]) -> JSONResponse:
-    print(f"Received {len(cards)} cards for database insertion.")
-    return JSONResponse(status_code=200, content={"status": "success", "inserted": len(cards)})
+async def add_cards_to_collection(cards: list[AddedCard], db: Annotated[AsyncSession, Depends(get_db)]) -> JSONResponse:
+    """Commit scanned cards to the persistent database collection."""
+    inserted_count = await queries.bulk_add_cards(db, cards)
+    print(f"Successfully added {inserted_count} cards to the database.")
+    return JSONResponse(status_code=200, content={"status": "success", "inserted": inserted_count})
 
 
 app.include_router(router)
