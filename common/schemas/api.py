@@ -1,4 +1,5 @@
 import time
+import uuid
 
 from pydantic import BaseModel
 
@@ -15,19 +16,21 @@ class InferenceResult(BaseModel):
     """Final embedding inference result format returned to the backend."""
 
     frame_id: str
-    card_number: int | None = None
-    card_set: str | None = None
-    card_name: str | None = None
-    card_language: str | None = None
+    id: uuid.UUID
+    card_number: int
+    card_set: str
+    card_name: str
+    card_language: str
     is_foil: bool = False
 
 
 class AddedCard(BaseModel):
-    """Card added to the database."""
+    """Payload for adding a card to the inventory from the frontend scanner."""
 
-    card_number: int | None = None
-    card_set: str | None = None
-    card_name: str | None = None
-    card_language: str | None = None
+    # The exact Scryfall UUID resolved by the HNSW search
+    id: uuid.UUID
+
+    # Inventory specific mutable properties
     is_foil: bool = False
-    card_condition: str | None = None
+    card_condition: str = "NM"
+    quantity: int = 1

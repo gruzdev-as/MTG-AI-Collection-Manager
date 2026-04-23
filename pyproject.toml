@@ -4,15 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-  "numpy>=2.4.1",
-  "opencv-python>=4.11.0.86",
-  "pandas>=2.3.3",
-  "pillow>=12.1.0",
-  "redis>=7.4.0",
-  "tqdm>=4.67.1",
-  "transformers>=4.57.6",
-]
+dependencies = ["pillow>=12.1.0", "redis>=7.4.0", "tqdm>=4.67.1"]
 
 [tool.ruff]
 # Enable/disable rules
@@ -43,18 +35,30 @@ dev = [
   "iprogress>=0.4",
   "ipykernel>=7.2.0",
   "ipywidgets>=8.1.8",
+  "kaggle>=2.0.1",
   "matplotlib>=3.10.8",
   "matplotlib-inline>=0.2.1",
+  "polars>=1.40.1",
 ]
-inference = ["hnswlib>=0.8.0", "pydantic>=2.12.5"]
+inference = [
+  "hnswlib>=0.8.0",
+  "pydantic>=2.12.5",
+  "transformers>=4.57.6",
+  "opencv-python>=4.11.0.86",
+  "numpy>=2.4.1",
+]
 backend = [
   "fastapi>=0.128.0",
   "uvicorn[standard]>=0.40.0",
   "python-multipart>=0.0.26",
   "sqlalchemy>=2.0.0",
   "psycopg[binary]>=3.1.0",
+  "psycopg2-binary>=2.9.12",
+  "opencv-python>=4.11.0.86",
+  "numpy>=2.4.1",
 ]
 parser = [
+  "pandas>=2.3.3",
   "aiohttp>=3.9.0",
   "aiofiles>=23.2.1",
   "ijson>=3.2.3",

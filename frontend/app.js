@@ -365,6 +365,9 @@ function pollForResult(frameId, rowElement) {
         clearInterval(interval);
         const data = await res.json();
 
+        // Save the abstract Scryfall UUID cleanly into the HTML attributes so we can push it later!
+        rowElement.dataset.cardId = data.id || "";
+
         // Update the row with the actual data from the AI
         const inputs = rowElement.querySelectorAll('input[type="text"], input[type="number"]');
         if (inputs.length >= 3) {
@@ -414,19 +417,24 @@ if (uploadBtn) {
     
     rows.forEach(row => {
       const inputs = row.querySelectorAll("input, select");
+      
+      // Critical check validating that the inference engine actually resolved a UUID for this row
+      const uuid = row.dataset.cardId;
+      if (!uuid) return;
+
       if (inputs.length >= 6) {
         payload.push({
-          card_name: inputs[0].value,
-          card_number: parseInt(inputs[1].value) || 0,
-          card_set: inputs[2].value,
-          card_language: inputs[3].value,
+          id: uuid,  // Map directly to our updated AddedCard Pydantic parameter!
           is_foil: inputs[4].checked,
           card_condition: inputs[5].value
         });
       }
     });
 
-    if (payload.length === 0) return;
+    if (payload.length === 0) {
+      alert("No valid scanned cards to upload. (Wait for inference to finish!)");
+      return;
+    }
 
     try {
       uploadBtn.disabled = true;
