@@ -45,7 +45,6 @@ services:
 
   redis:
     image: redis:7
-    container_name: redis
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]

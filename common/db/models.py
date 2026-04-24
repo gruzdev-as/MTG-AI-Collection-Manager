@@ -21,6 +21,10 @@ class Card(Base):
     card_set: Mapped[str] = mapped_column(String(10), nullable=False)
     card_set_name: Mapped[str | None] = mapped_column(String(100))
     card_language: Mapped[str] = mapped_column(String(5), nullable=False)
+    card_rarity: Mapped[str] = mapped_column(String(10), nullable=False)
+    card_cmc: Mapped[int] = mapped_column(Integer, nullable=False)
+    card_colors: Mapped[str] = mapped_column(String(10), nullable=False)
+    card_image_url: Mapped[str] = mapped_column(String(150), nullable=False)
 
     collections: Mapped[list["Collection"]] = relationship(back_populates="card", cascade="all, delete-orphan")
 
