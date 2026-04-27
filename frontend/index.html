@@ -1,168 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MTG Scanner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=5">
-</head>
-
-<body>
-
-  <!-- Home View -->
-  <div id="home-view" class="view active">
-    <!-- Header & Scan Trigger -->
-    <div class="home-header">
-      <div class="header-content">
-        <h1>MTG Scanner</h1>
-        <p>Scan Magic the Gathering cards and track your inventory in real-time.</p>
-        <button class="action-btn primary large-btn" id="start-scan-btn">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <circle cx="12" cy="13" r="3" />
-          </svg>
-          Scan New Card
-        </button>
-      </div>
-    </div>
-
-    <!-- Table Section -->
-    <div class="table-section">
-      <div class="table-container">
-        <div class="table-header">
-          <h2>Detected Cards</h2>
-          <span class="badge" id="card-count">0</span>
-        </div>
-
-        <div class="table-responsive">
-          <table id="cards-table">
-            <colgroup>
-              <col style="width: 250px; min-width: 250px;">
-              <col style="width: 80px; min-width: 80px;">
-              <col style="width: 75px; min-width: 75px;">
-              <col style="width: 110px; min-width: 110px;">
-              <col style="width: 60px; min-width: 60px;">
-              <col style="width: 90px; min-width: 90px;">
-              <col style="width: 80px; min-width: 80px;">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Card Name</th>
-                <th>Number</th>
-                <th>Set</th>
-                <th>Language</th>
-                <th>Foil</th>
-                <th>Condition</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="cards-body">
-              <!-- Rows injected here by app.js -->
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="table-footer" id="table-footer" style="display: none; padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); justify-content: center;">
-          <button class="action-btn primary" id="upload-db-btn">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-            </svg>
-            Upload to database
-          </button>
-        </div>
-
-        <div class="empty-state" id="empty-state">
-          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25H12m0 0v-1.5m0 1.5v1.5m-3-1.5h1.5m-3 0h1.5" />
-          </svg>
-          <p>No cards detected yet.</p>
-          <span class="muted">Press "Scan New Card" to begin.</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Camera View -->
-  <div id="camera-view" class="view">
-    <div class="camera-wrapper" id="camera-wrapper">
-      <video id="camera-feed" autoplay playsinline muted></video>
-      <canvas id="overlay-canvas"></canvas>
-
-      <div class="camera-hud-top">
-        <button class="icon-btn" id="close-camera-btn" title="Back to home">
-          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button class="icon-btn" id="switch-camera-btn" title="Switch camera">
-          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="guide-text" id="guide-text">Place the card inside the frame</div>
-    </div>
-
-    <div class="controls-bar">
-      <button class="capture-btn" id="capture-btn">
-        <span class="capture-btn-ring"></span>
-        <span class="capture-btn-inner"></span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Preview View (shown after capture) -->
-  <div id="preview-view" class="view">
-    <div class="preview-wrapper">
-      <canvas id="preview-canvas"></canvas>
-    </div>
-
-    <div class="preview-actions">
-      <button class="action-btn secondary" id="retake-btn">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Retake
-      </button>
-      <button class="action-btn primary" id="send-btn">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-        Send
-      </button>
-    </div>
-  </div>
-
-  <!-- Permission / Error View -->
-  <div id="error-view" class="view">
-    <div class="error-card">
-      <div class="error-icon">
-        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      </div>
-      <h2>Camera Error</h2>
-      <p id="error-message">Please allow camera access to scan your MTG cards.</p>
-      <div class="error-actions" style="display:flex; gap:1rem; justify-content:center;">
-        <button class="action-btn secondary" id="back-home-err-btn">Back</button>
-        <button class="action-btn primary" id="retry-btn">Try Again</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Flash overlay for capture feedback -->
-  <div id="flash-overlay" class="flash-overlay"></div>
-
-  <script src="app.js?v=1"></script>
-</body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="error-log" style="color: red; padding: 20px; font-family: monospace; white-space: pre-wrap; font-size: 16px; position: fixed; top: 0; left: 0; z-index: 9999; background: white; width: 100vw; height: 100vh; display: none;"></div>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        document.getElementById('error-log').style.display = 'block';
+        document.getElementById('error-log').innerText += 'ERROR: ' + message + '\n';
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        document.getElementById('error-log').style.display = 'block';
+        document.getElementById('error-log').innerText += 'PROMISE REJECTION: ' + event.reason + '\n';
+      });
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

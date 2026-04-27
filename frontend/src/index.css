@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0e1a;
+  --color-surface: rgba(15, 23, 42, 0.85);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #3b82f6;
+  --color-accent-glow: rgba(59, 130, 246, 0.4);
+}
+
+@layer base {
+  html, body {
+    @apply h-full w-full overflow-hidden bg-bg text-slate-100 font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #root {
+    @apply h-full w-full flex flex-col;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-accent text-white shadow-[0_4px_20px_var(--color-accent-glow)] transition-all active:scale-95;
+  }
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold bg-white/5 text-slate-100 border border-border transition-all active:scale-95 hover:bg-white/10;
+  }
+  
+  .glass-panel {
+    @apply bg-surface backdrop-blur-xl border border-border rounded-2xl shadow-2xl;
+  }
+
+  .nav-header {
+    @apply flex items-center p-4 bg-bg border-b border-border sticky top-0 z-50;
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* Spinner used for networking tasks */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  @apply inline-block w-4 h-4 rounded-full border-2 border-white/30 border-t-white;
+  animation: spin 0.6s linear infinite;
+}

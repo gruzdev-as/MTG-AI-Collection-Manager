@@ -11,12 +11,7 @@ class EmbeddingGenerator:
     def __init__(self, model_path: Path) -> None:
         self.model: CLIPModel = CLIPModel.from_pretrained(model_path, local_files_only=True)
         self.processor: CLIPProcessor = CLIPProcessor.from_pretrained(model_path, local_files_only=True)
-        if torch.cuda.is_available():
-            self.device = torch.device("cuda")
-        elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
-            self.device = torch.device("mps")
-        else:
-            self.device = torch.device("cpu")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
         print("Model has loaded")
 

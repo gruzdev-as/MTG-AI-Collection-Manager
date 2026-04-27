@@ -26,8 +26,8 @@ class HNSWSearchTool:
 
         print("Search Engine has loaded")
 
-    def search_in_hnsw(self, query_embedding: ndarray) -> dict[str, str]:
+    def search_in_hnsw(self, query_embedding: ndarray) -> list[dict[str, str]]:
         """Use hnsw index to retrieval info."""
-        labels, _ = self.hnsw_index.knn_query(query_embedding, k=1)
+        labels, _ = self.hnsw_index.knn_query(query_embedding, k=5)
 
-        return self.image_metadata[str(labels[0][0])]
+        return [self.image_metadata[str(label)] for label in labels[0]]
