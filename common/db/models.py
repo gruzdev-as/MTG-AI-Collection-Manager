@@ -40,11 +40,11 @@ class Collection(Base):
     card_condition: Mapped[str] = mapped_column(String(20), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    added_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    added_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.UTC))
     last_updated: Mapped[datetime] = mapped_column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(timezone.UTC),
+        onupdate=lambda: datetime.now(timezone.UTC),
     )
 
     __table_args__ = (

@@ -11,9 +11,8 @@ from common.ml.config import HNSWConfig, InferenceConfig
 from common.redis.client import REDIS
 from common.redis.config import StreamConfig
 from common.schemas.api import EmbeddingTask, InferenceResult
-
-from .embedding_generation import EmbeddingGenerator
-from .search import HNSWSearchTool
+from inference.embedding_generation import EmbeddingGenerator
+from inference.search import HNSWSearchTool
 
 
 def process(embedding_task: EmbeddingTask) -> None:

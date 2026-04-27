@@ -21,7 +21,7 @@ from common.schemas.api import AddedCard, EmbeddingTask, PaginatedCollection, Up
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Lifecycle events for the FastAPI application."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
