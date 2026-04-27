@@ -2,6 +2,18 @@
 
 A modern, highly-scalable platform to automate cataloging Magic: The Gathering cards. Instead of manually searching and adding cards, this application lets you point your smartphone or webcam at a physical card, automatically detects it using computer vision and machine learning embeddings, fetches its real-time market price, and persists it to your personal digital portfolio.
 
+<table>
+  <tr>
+    <td align="center">
+         <img width="402" height="874" alt="ScreenRecording_04-28-2026 00-58-18_1 (1)" src="https://github.com/user-attachments/assets/dfb364e1-a9bd-473a-9439-b3fa1a24b149" />
+    </td>
+    <td align="center">
+         <img width="402" height="874" alt="ScreenRecording_04-28-2026 00-58-18_1 2 (1)" src="https://github.com/user-attachments/assets/ea6eab2c-360c-44b0-af02-e43587f587c9" />
+    </td>
+  </tr>
+</table>
+
+
 ## Project Motivation
 
 I was inspired to simplify the process of managing my MTG cards for trading purposes. Manually updating a collection is time-consuming, so I set out to automate it. What started as a simple script has evolved into a fully containerized microservice architecture featuring an in-browser scanner, real-time asynchronous inference, and daily automated market price synchronization.
