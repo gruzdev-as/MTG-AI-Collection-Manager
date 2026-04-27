@@ -1,5 +1,5 @@
+import datetime
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
@@ -40,11 +40,11 @@ class Collection(Base):
     card_condition: Mapped[str] = mapped_column(String(20), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    added_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.UTC))
+    added_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
     last_updated: Mapped[datetime] = mapped_column(
         DateTime,
-        default=lambda: datetime.now(timezone.UTC),
-        onupdate=lambda: datetime.now(timezone.UTC),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
 
     __table_args__ = (
