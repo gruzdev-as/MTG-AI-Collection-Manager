@@ -193,7 +193,9 @@ export default function ScannerTab() {
         id: Math.random().toString(), 
         frameId, 
         name: 'Detecting...', number: '', set: '', language: 'EN', condition: 'NM', isFoil: false,
-        uuid: null 
+        uuid: null,
+        matches: [],
+        selectedToUpload: true
       };
       
       setPendingCards(prev => [newCardState, ...prev]);
@@ -203,17 +205,18 @@ export default function ScannerTab() {
       const interval = setInterval(async () => {
         try {
           const data = await api.pollResult(frameId);
-          if (data) {
+          if (data && data.matches && data.matches.length > 0) {
             clearInterval(interval);
             setPendingCards(current => current.map(c => c.frameId === frameId ? {
               ...c, 
-              name: data.card_name, 
-              number: data.card_number, 
-              set: data.card_set, 
-              language: data.card_language || c.language,
-              uuid: data.id
+              matches: data.matches,
+              name: data.matches[0].card_name, 
+              number: data.matches[0].card_number, 
+              set: data.matches[0].card_set, 
+              language: data.matches[0].card_language || c.language,
+              uuid: data.matches[0].id
             } : c));
-            setToast({ message: `Detected: ${data.card_name}`, type: 'success' });
+            setToast({ message: `Detected: ${data.matches[0].card_name}`, type: 'success' });
             setTimeout(() => setToast(null), 3000);
           }
         } catch(e) { clearInterval(interval); }
@@ -228,7 +231,7 @@ export default function ScannerTab() {
 
   // ── Database Handling ──
   const uploadToDB = async () => {
-    const validUploads = pendingCards.filter(c => c.uuid !== null).map(c => ({
+    const validUploads = pendingCards.filter(c => c.selectedToUpload && c.uuid !== null).map(c => ({
       id: c.uuid,
       is_foil: c.isFoil,
       card_condition: c.condition,
@@ -236,7 +239,7 @@ export default function ScannerTab() {
     }));
     
     if (!validUploads.length) {
-      alert("No valid cards finished detecting yet.");
+      alert("No valid, selected cards ready to upload.");
       return;
     }
 
@@ -245,7 +248,7 @@ export default function ScannerTab() {
       await api.addCardsToCollection(validUploads);
       setToast({ message: "Cards successfully synced!", type: 'success' });
       setTimeout(() => setToast(null), 3000);
-      setPendingCards([]);
+      setPendingCards(prev => prev.filter(c => !(c.selectedToUpload && c.uuid !== null)));
     } catch(e) {
       setToast({ message: e.message, type: 'error' });
       setTimeout(() => setToast(null), 4000);
@@ -341,7 +344,10 @@ export default function ScannerTab() {
                    <table className="w-full text-left min-w-[700px]">
                      <thead>
                        <tr className="border-b border-border bg-black/10">
-                         <th className="p-4 text-xs font-medium text-slate-400">CARD</th>
+                         <th className="p-4 w-12 text-center">
+                           <input type="checkbox" onChange={(e) => setPendingCards(prev => prev.map(p => ({...p, selectedToUpload: e.target.checked})))} checked={pendingCards.length > 0 && pendingCards.every(p => p.selectedToUpload)} className="w-4 h-4 accent-blue-500 bg-transparent" />
+                         </th>
+                         <th className="p-4 text-xs font-medium text-slate-400">CARD MATCHES</th>
                          <th className="p-4 text-xs font-medium text-slate-400">SET</th>
                          <th className="p-4 text-xs font-medium text-slate-400 w-24">LANG</th>
                          <th className="p-4 text-xs font-medium text-slate-400 w-24">FOIL</th>
@@ -351,16 +357,49 @@ export default function ScannerTab() {
                      </thead>
                      <tbody className="divide-y divide-border/50">
                        {pendingCards.map(c => (
-                         <tr key={c.id}>
-                           <td className="p-4 font-semibold">{c.name} <span className="text-slate-500 font-normal text-xs ml-2">{c.number}</span></td>
+                         <tr key={c.id} className={c.selectedToUpload ? "bg-white/5" : "opacity-60"}>
+                           <td className="p-4 text-center">
+                             <input type="checkbox" checked={c.selectedToUpload} onChange={(e) => setPendingCards(prev => prev.map(p => p.id === c.id ? {...p, selectedToUpload: e.target.checked} : p))} className="w-4 h-4 accent-blue-500 bg-transparent" />
+                           </td>
+                           <td className="p-4 font-semibold">
+                             {c.matches && c.matches.length > 0 ? (
+                               <select 
+                                 className="bg-transparent border border-border rounded p-1.5 w-full text-sm font-medium focus:ring-2 focus:ring-blue-500"
+                                 value={c.uuid || ''}
+                                 onChange={(e) => {
+                                   const match = c.matches.find(m => m.id === e.target.value);
+                                   if(match) {
+                                     setPendingCards(prev => prev.map(p => p.id === c.id ? {
+                                       ...p,
+                                       uuid: match.id,
+                                       name: match.card_name,
+                                       number: match.card_number,
+                                       set: match.card_set,
+                                       language: match.card_language || p.language
+                                     } : p));
+                                   }
+                                 }}
+                               >
+                                 {c.matches.map((m, idx) => (
+                                   <option key={m.id} value={m.id} className="bg-slate-900 text-slate-100">
+                                     {m.card_name} - {m.card_set.toUpperCase()} #{m.card_number} (Match {idx+1})
+                                   </option>
+                                 ))}
+                               </select>
+                             ) : (
+                               <div className="flex items-center gap-2">
+                                 {c.name} <span className="text-slate-500 font-normal text-xs">{c.number}</span>
+                               </div>
+                             )}
+                           </td>
                            <td className="p-4 font-mono text-sm">{c.set || '-'}</td>
                            <td className="p-4 font-bold text-slate-300 text-xs">{c.language}</td>
                            <td className="p-4">
                              <input type="checkbox" checked={c.isFoil} onChange={(e) => setPendingCards(prev => prev.map(p => p.id === c.id ? {...p, isFoil: e.target.checked} : p))} className="w-4 h-4 accent-blue-500 bg-transparent" />
                            </td>
                            <td className="p-4">
-                              <select value={c.condition} onChange={(e) => setPendingCards(prev => prev.map(p => p.id === c.id ? {...p, condition: e.target.value} : p))} className="bg-transparent border border-border rounded p-1 w-full text-sm">
-                                <option className="bg-bg" value="NM">NM</option><option className="bg-bg" value="SP">SP</option><option className="bg-bg" value="MP">MP</option><option className="bg-bg" value="HP">HP</option>
+                              <select value={c.condition} onChange={(e) => setPendingCards(prev => prev.map(p => p.id === c.id ? {...p, condition: e.target.value} : p))} className="bg-transparent border border-border rounded p-1.5 w-full text-sm focus:ring-2 focus:ring-blue-500">
+                                <option className="bg-slate-900" value="NM">NM</option><option className="bg-slate-900" value="SP">SP</option><option className="bg-slate-900" value="MP">MP</option><option className="bg-slate-900" value="HP">HP</option>
                               </select>
                            </td>
                            <td className="p-4">
@@ -372,8 +411,8 @@ export default function ScannerTab() {
                    </table>
                 </div>
                 <div className="p-4 bg-black/20 border-t border-border flex justify-center">
-                  <button onClick={uploadToDB} disabled={isUploading || pendingCards.some(c => c.uuid === null)} className="btn-primary w-full sm:w-auto">
-                    {isUploading ? 'Uploading...' : 'Upload to Database'}
+                  <button onClick={uploadToDB} disabled={isUploading || pendingCards.filter(c => c.selectedToUpload && c.uuid !== null).length === 0} className="btn-primary w-full sm:w-auto">
+                    {isUploading ? 'Uploading...' : `Upload Selected (${pendingCards.filter(c => c.selectedToUpload).length})`}
                   </button>
                 </div>
               </>

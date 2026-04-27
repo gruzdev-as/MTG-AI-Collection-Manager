@@ -47,8 +47,7 @@ async def get_paginated_collection(
     sort_by: str = "added_at",
     order: str = "desc",
 ) -> PaginatedCollection:
-    count_stmt = select(func.count(Collection.collection_id))
-    total_count = await db.scalar(count_stmt)
+    total_count = await db.scalar(select(func.count(Collection.collection_id)))
 
     rarity_weight = case(
         {

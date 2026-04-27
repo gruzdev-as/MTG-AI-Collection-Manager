@@ -13,16 +13,22 @@ class EmbeddingTask(BaseModel):
     created_at: float = time.time()
 
 
-class InferenceResult(BaseModel):
-    """Final embedding inference result format returned to the backend."""
+class CardMatch(BaseModel):
+    """A single card match from the inference engine."""
 
-    frame_id: str
     id: uuid.UUID
     card_number: str
     card_set: str
     card_name: str
     card_language: str
     is_foil: bool = False
+
+
+class InferenceResult(BaseModel):
+    """Final embedding inference result format returned to the backend."""
+
+    frame_id: str
+    matches: list[CardMatch]
 
 
 class AddedCard(BaseModel):

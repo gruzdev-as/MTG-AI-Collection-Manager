@@ -32,7 +32,7 @@ def process(embedding_task: EmbeddingTask) -> None:
 
     results = hnsw_search.search_in_hnsw(embedding)
 
-    inference_result = InferenceResult(frame_id=embedding_task.frame_id, **results)
+    inference_result = InferenceResult(frame_id=embedding_task.frame_id, matches=results)
     REDIS.set(f"result:{embedding_task.frame_id}", inference_result.model_dump_json(), ex=300)
 
     print(f"Result formatted and pushed into Redis for frame {embedding_task.frame_id}")
