@@ -26,6 +26,7 @@ This project has been heavily modernized from its original Flask roots. It now r
 - **Backend API**: FastAPI + SQLAlchemy (async) + PostgreSQL. Manages the collection state, user portfolios, and orchestrates tasks.
 - **Inference Worker**: A dedicated background worker processing image embeddings natively. Driven by Redis Streams for scalable, asynchronous task queuing.
 - **Price Synchronization**: Integrates directly with the Scryfall API via `httpx` and `APScheduler` to update market prices (USD/EUR + Foil values) automatically every 24 hours.
+- **Init Service**: A dedicated data-orchestration container that verifies, downloads all required data dependencies (CLIP models, HNSW indices, and card metadata and pushes them to the database) automatically on first boot.
 
 ## Key Features
 
@@ -39,8 +40,8 @@ This project has been heavily modernized from its original Flask roots. It now r
 
 1) Pretrained model - [CLIP-VIT-LARGE](https://huggingface.co/openai/clip-vit-large-patch14)
 2) Images for embedding creation - [Kaggle MTG image Dataset](https://www.kaggle.com/datasets/strangerone/mtg-multilang-images) 
-3) HNSW Index for embeddings - [HNSW_Index](https://drive.google.com/file/d/1JWQZn68z7fdvxXt1bywYjJR3DsHPW3eU/view?usp=sharing) 
-4) JSON for HNSW index embeddings - [HNSW json](https://drive.google.com/file/d/1F0FgjCM91Wei4LcLvc7R6TrG2_ZefeSF/view?usp=sharing)
+3) HNSW Index for embeddings - [HNSW_Index](https://drive.google.com/drive/folders/1FNOtY4-KcdIrOxSsqdGszScTwIKx8Tkk?usp=sharing) 
+4) JSON for HNSW index embeddings - [HNSW json](https://drive.google.com/drive/folders/1FNOtY4-KcdIrOxSsqdGszScTwIKx8Tkk?usp=sharing")
 5) [ScryFall API](https://scryfall.com/docs/api)
 
 ## Installation & Running Locally
@@ -49,14 +50,18 @@ The entire application is orchestrated using Docker Compose.
 
 1. Ensure you have Docker and Docker Compose installed.
 2. Clone the repository and navigate to the project root.
-3. Download the HNSW index `.bin` and `.json` files (linked above) and place them in the correct data directory (`data/embeddings/` or as mapped in your `docker-compose.yaml`).
-4. Build and run the containers:
+3. Start the services:
    ```bash
-   docker compose up --build -d
+   docker compose up --build -d # If you want to run services in background
+   docker compose up --build # If you want to run services in foreground - all logs will be in one terminal
+   ```
+4. **Monitor the Initialization**: On the first run, the `init` service will download several gigabytes of models and indices. The backend and inference services will wait for this to finish before becoming available. Monitor progress with (if running in foreground):
+   ```bash
+   docker compose logs -f init
    ```
 5. Access the application in your browser:
-   - Make sure you use the local IP address of the host machine (e.g., `https://192.168.1.X`) to access the frontend from your smartphone.
-   - Note: Because camera access requires a secure context, the frontend Nginx proxy serves a self-signed HTTPS certificate.
+   - Access the frontend at `https://localhost` (or your IP address if using a smartphone).
+   - Note: Because camera access requires a secure context, the frontend Nginx proxy serves a self-signed HTTPS certificate. You may need to accept the browser security warning.
 
 ## Process Flow
 
@@ -70,4 +75,4 @@ The FastAPI backend receives the image and immediately drops it into a Redis Str
 The Inference worker picks up the job, runs perspective correction (if necessary), and passes the image through the CLIP model. It then queries the HNSW index to find the 5 closest neighbors using cosine similarity.
 
 ### 4. Database & Pricing (Postgres)
-When you confirm the match, the backend commits the card to PostgreSQL. A dedicated price synchronization engine runs daily batches against the Scryfall API, aggressively applying fallback strategies (e.g. matching non-English cards to their English pricing equivalents) to keep your portfolio accurately valued.
+When you confirm the match, the backend commits the card to PostgreSQL. A dedicated price synchronization engine runs daily batches against the Scryfall API to update market prices.

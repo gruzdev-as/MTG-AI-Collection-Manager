@@ -1,4 +1,22 @@
 services:
+  init:
+    build:
+      context: .
+      dockerfile: init/Dockerfile
+      args:
+        TORCH_BACKEND: cpu
+    environment:
+      PYTHONUNBUFFERED: 1
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      HF_HUB_DISABLE_PROGRESS_BAR: 1
+    volumes:
+      - .volumes/data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   backend:
     build:
       context: .
@@ -11,6 +29,8 @@ services:
     volumes:
       - .volumes/data:/app/data
     depends_on:
+      init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
 
@@ -36,11 +56,12 @@ services:
     volumes:
       - .volumes/data:/app/inference/data
     depends_on:
+      init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-
   redis:
     image: redis:7
     restart: unless-stopped

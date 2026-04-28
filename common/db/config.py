@@ -16,3 +16,8 @@ class PostgresConfig:
     def url(self) -> str:
         """Construct SQLAlchemy connection string."""
         return f"postgresql+psycopg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+
+    @property
+    def alt_url(self) -> str:
+        """Construct raw Postgres URL without psycopg2."""
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
