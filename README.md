@@ -5,14 +5,13 @@ A modern, highly-scalable platform to automate cataloging Magic: The Gathering c
 <table>
   <tr>
     <td align="center">
-         <img width="402" height="874" alt="ScreenRecording_04-28-2026 00-58-18_1 (1)" src="https://github.com/user-attachments/assets/dfb364e1-a9bd-473a-9439-b3fa1a24b149" />
+         <img width="402" height="874" alt="output_2" src="https://github.com/user-attachments/assets/be46446e-1657-44c0-b376-fc558223ba37" />
     </td>
     <td align="center">
-         <img width="402" height="874" alt="ScreenRecording_04-28-2026 00-58-18_1 2 (1)" src="https://github.com/user-attachments/assets/ea6eab2c-360c-44b0-af02-e43587f587c9" />
+        <img width="402" height="874" alt="output" src="https://github.com/user-attachments/assets/7f3e26b4-1162-48b9-85ce-64c4caec296f" />
     </td>
   </tr>
 </table>
-
 
 ## Project Motivation
 
