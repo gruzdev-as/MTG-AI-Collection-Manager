@@ -6,7 +6,7 @@ class ScryfallConfig:
     """Configuration constants for the Scryfall price sync."""
 
     collection_url: str = "https://api.scryfall.com/cards/collection"
-    batch_size: int = 100
+    batch_size: int = 75
     rate_limit_delay: float = 0.1
     retention_days: int = 90
     stale_threshold_hours: int = 24
