@@ -1,7 +1,7 @@
 import datetime
 import uuid
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -27,6 +27,7 @@ class Card(Base):
     card_image_url: Mapped[str] = mapped_column(String(150), nullable=False)
 
     collections: Mapped[list["Collection"]] = relationship(back_populates="card", cascade="all, delete-orphan")
+    prices: Mapped[list["CardPrice"]] = relationship(back_populates="card", cascade="all, delete-orphan")
 
 
 class Collection(Base):
@@ -53,3 +54,19 @@ class Collection(Base):
     )
 
     card: Mapped["Card"] = relationship(back_populates="collections")
+
+
+class CardPrice(Base):
+    """Daily price snapshot for a card, sourced from Scryfall."""
+
+    __tablename__ = "card_prices"
+
+    price_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    card_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cards.id"), nullable=False, index=True)
+    price_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_usd_foil: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_eur_foil: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+
+    card: Mapped["Card"] = relationship(back_populates="prices")

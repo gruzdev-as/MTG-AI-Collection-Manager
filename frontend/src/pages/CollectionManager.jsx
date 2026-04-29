@@ -5,6 +5,8 @@ import { api } from '../services/api';
 export default function CollectionManager() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalValueUsd, setTotalValueUsd] = useState(0);
+  const [totalValueEur, setTotalValueEur] = useState(0);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('added_at');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -19,6 +21,8 @@ export default function CollectionManager() {
       const data = await api.getCollection(ITEMS_PER_PAGE, offset, currentSortBy, currentSortOrder);
       setItems(data.items);
       setTotal(data.total_count);
+      setTotalValueUsd(data.total_value_usd || 0);
+      setTotalValueEur(data.total_value_eur || 0);
       setPage(pageNum);
     } catch (error) {
       console.error(error);
@@ -72,14 +76,22 @@ export default function CollectionManager() {
       <div className="max-w-6xl mx-auto w-full">
 
         {/* Stats Dashboard */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           <div className="glass-panel p-6 flex flex-col">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Unique Cards</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Unique Cards</span>
             <span className="text-3xl font-bold text-slate-100">{items.length} (Page)</span>
           </div>
           <div className="glass-panel p-6 flex flex-col">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Physical Cards</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Physical</span>
             <span className="text-3xl font-bold text-slate-100">{total}</span>
+          </div>
+          <div className="glass-panel p-6 flex flex-col">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Est. Value (USD)</span>
+            <span className="text-3xl font-bold text-green-400">${totalValueUsd.toFixed(2)}</span>
+          </div>
+          <div className="glass-panel p-6 flex flex-col">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Est. Value (EUR)</span>
+            <span className="text-3xl font-bold text-blue-400">€{totalValueEur.toFixed(2)}</span>
           </div>
         </div>
 
@@ -92,7 +104,7 @@ export default function CollectionManager() {
                   <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-16">Coll ID</th>
                   <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('card_name')}>
                     <div className="flex items-center gap-1">
-                      Card Name 
+                      Card Name
                       {sortBy === 'card_name' ? (sortOrder === 'desc' ? <ArrowDown size={10} /> : <ArrowUp size={10} />) : <ArrowUpDown size={10} className="opacity-30" />}
                     </div>
                   </th>
@@ -112,6 +124,18 @@ export default function CollectionManager() {
                   </th>
                   <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-20">Foil</th>
                   <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-20">Cond</th>
+                  <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white" onClick={() => toggleSort('price_usd')}>
+                    <div className="flex items-center gap-1">
+                      Price (USD)
+                      {sortBy === 'price_usd' ? (sortOrder === 'desc' ? <ArrowDown size={10} /> : <ArrowUp size={10} />) : <ArrowUpDown size={10} className="opacity-30" />}
+                    </div>
+                  </th>
+                  <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white" onClick={() => toggleSort('price_eur')}>
+                    <div className="flex items-center gap-1">
+                      Price (EUR)
+                      {sortBy === 'price_eur' ? (sortOrder === 'desc' ? <ArrowDown size={10} /> : <ArrowUp size={10} />) : <ArrowUpDown size={10} className="opacity-30" />}
+                    </div>
+                  </th>
                   <th className="p-4 text-[10px] font-medium text-slate-400 uppercase tracking-wider w-32 cursor-pointer hover:text-white" onClick={() => toggleSort('quantity')}>
                     <div className="flex items-center gap-1">
                       Qty
@@ -142,12 +166,11 @@ export default function CollectionManager() {
                     <td className="p-4 text-xs text-slate-500">{item.card_number}</td>
                     <td className="p-4 text-xs text-slate-300 uppercase font-bold">{item.card_language}</td>
                     <td className="p-4">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${
-                        item.card_rarity === 'mythic' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                        item.card_rarity === 'rare' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                        item.card_rarity === 'uncommon' ? 'bg-slate-400/20 text-slate-300 border border-slate-400/30' :
-                        'bg-slate-700/20 text-slate-500 border border-slate-700/30'
-                      }`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${item.card_rarity === 'mythic' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                          item.card_rarity === 'rare' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                            item.card_rarity === 'uncommon' ? 'bg-slate-400/20 text-slate-300 border border-slate-400/30' :
+                              'bg-slate-700/20 text-slate-500 border border-slate-700/30'
+                        }`}>
                         {item.card_rarity}
                       </span>
                     </td>
@@ -158,6 +181,12 @@ export default function CollectionManager() {
                     </td>
                     <td className="p-4">
                       <span className="text-[11px] font-mono text-slate-300">{item.card_condition}</span>
+                    </td>
+                    <td className="p-4 text-[11px] font-mono text-green-400">
+                      ${(item.is_foil ? (item.price_usd_foil || item.price_usd || 0) : (item.price_usd || 0)).toFixed(2)}
+                    </td>
+                    <td className="p-4 text-[11px] font-mono text-blue-400">
+                      €{(item.is_foil ? (item.price_eur_foil || item.price_eur || 0) : (item.price_eur || 0)).toFixed(2)}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">

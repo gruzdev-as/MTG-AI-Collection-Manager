@@ -56,11 +56,19 @@ class CollectionItemResponse(BaseModel):
     added_at: datetime
     last_updated: datetime
 
+    # Price data
+    price_usd: float | None = None
+    price_usd_foil: float | None = None
+    price_eur: float | None = None
+    price_eur_foil: float | None = None
+
 
 class PaginatedCollection(BaseModel):
     """Response model for a paginated view of the user's collection."""
 
     total_count: int
+    total_value_usd: float = 0.0
+    total_value_eur: float = 0.0
     items: list[CollectionItemResponse]
 
 

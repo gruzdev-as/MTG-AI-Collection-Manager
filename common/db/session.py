@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from common.db.config import PostgresConfig
 
-# Initialize Postgres configuration
 pg_config = PostgresConfig()
 
 engine = create_async_engine(
@@ -16,6 +15,7 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
 
 async def get_db() -> AsyncSession:
     """Dependency for getting async database sessions."""

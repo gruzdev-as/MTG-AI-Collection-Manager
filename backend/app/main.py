@@ -11,6 +11,8 @@ from fastapi import APIRouter, Depends, FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend import prices
+from backend.prices import start_price_engine
 from backend.sql import queries
 from backend.vision.image_processor import ImageProcesser
 from common.db.models import Base
@@ -25,7 +27,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Lifecycle events for the FastAPI application."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    scheduler = await start_price_engine()
     yield
+    scheduler.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -109,6 +113,13 @@ async def delete_collection_item(collection_id: int, db: Annotated[AsyncSession,
     if not success:
         return JSONResponse(status_code=404, content={"error": "Item not found"})
     return JSONResponse(status_code=200, content={"status": "success"})
+
+
+@router.post("/prices/sync")
+async def trigger_price_sync(db: Annotated[AsyncSession, Depends(get_db)]) -> JSONResponse:
+    """Manually trigger a full Scryfall price sync. Useful for testing and on-demand refreshes."""
+    synced = await prices.sync_all_prices(db)
+    return JSONResponse(status_code=200, content={"status": "success", "synced": synced})
 
 
 app.include_router(router)
