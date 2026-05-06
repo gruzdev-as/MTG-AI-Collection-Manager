@@ -32,6 +32,7 @@ show-fixes = true
 
 [dependency-groups]
 dev = [
+  "certifi>=2026.1.4",
   "iprogress>=0.4",
   "ipykernel>=7.2.0",
   "ipywidgets>=8.1.8",
@@ -39,11 +40,13 @@ dev = [
   "matplotlib>=3.10.8",
   "matplotlib-inline>=0.2.1",
   "polars>=1.40.1",
+  "scikit-learn>=1.8.0",
 ]
 inference = [
   "hnswlib>=0.8.0",
   "pydantic>=2.12.5",
   "transformers>=4.57.6",
+  "torchvision>=0.24.1",
   "opencv-python>=4.11.0.86",
   "numpy>=2.4.1",
 ]

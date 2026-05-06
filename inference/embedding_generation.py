@@ -2,16 +2,17 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from transformers import CLIPModel, CLIPProcessor
+from transformers import AutoImageProcessor, AutoModel, DINOv3ViTModel
+from transformers import DINOv3ViTImageProcessorFast as DINOv3ViTImageProcessor
 
 
 class EmbeddingGenerator:
-    """Generate cropped image embedding using CLIP."""
+    """Generate cropped image embedding using DINOV3."""
 
     def __init__(self, model_path: Path) -> None:
-        self.model: CLIPModel = CLIPModel.from_pretrained(model_path, local_files_only=True)
-        self.processor: CLIPProcessor = CLIPProcessor.from_pretrained(model_path, local_files_only=True)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model: DINOv3ViTModel = AutoModel.from_pretrained(model_path, local_files_only=True)
+        self.processor: DINOv3ViTImageProcessor = AutoImageProcessor.from_pretrained(model_path, local_files_only=True)
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
         print("Model has loaded")
 
@@ -29,7 +30,7 @@ class EmbeddingGenerator:
         inputs = self.processor(images=[images], return_tensors="pt")
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        image_features = self.model.get_image_features(**inputs)
+        image_features = self.model(**inputs).pooler_output
         image_features = image_features / image_features.norm(dim=1, keepdim=True)
 
         return image_features.cpu().numpy()

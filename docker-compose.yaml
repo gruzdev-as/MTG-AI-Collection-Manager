@@ -52,7 +52,13 @@ services:
       args:
         TORCH_BACKEND: cpu
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
+      MODEL_PATH: ${MODEL_PATH}
+      HNSW_INDEX_PATH: ${HNSW_INDEX_PATH}
+      HNSW_JSON_PATH: ${HNSW_JSON_PATH}
+      HNSW_INDEX_DIM: ${HNSW_INDEX_DIM}
+      HNSW_INDEX_SPACE: ${HNSW_INDEX_SPACE}
+      HNSW_INDEX_EF: ${HNSW_INDEX_EF}
     volumes:
       - .volumes/data:/app/inference/data
     depends_on:
@@ -62,6 +68,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  
   redis:
     image: redis:7
     restart: unless-stopped

@@ -16,3 +16,7 @@ data/
 
 # IDE
 .vscode/
+
+#experiments
+notebooks/
+.hf_cache/

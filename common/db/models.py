@@ -41,8 +41,8 @@ class Collection(Base):
     card_condition: Mapped[str] = mapped_column(String(20), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    added_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
-    last_updated: Mapped[datetime] = mapped_column(
+    added_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    last_updated: Mapped[datetime.datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.datetime.now(datetime.UTC),
         onupdate=lambda: datetime.datetime.now(datetime.UTC),
@@ -67,6 +67,6 @@ class CardPrice(Base):
     price_usd_foil: Mapped[float | None] = mapped_column(Float, nullable=True)
     price_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
     price_eur_foil: Mapped[float | None] = mapped_column(Float, nullable=True)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    fetched_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
 
     card: Mapped["Card"] = relationship(back_populates="prices")
