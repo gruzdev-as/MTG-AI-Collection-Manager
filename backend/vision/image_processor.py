@@ -14,11 +14,23 @@ class ImageProcesser:
         return ImageProcesser.crop_warp_image_from_contour(image, contour)
 
     @staticmethod
+    def _normalize_image(image: np.ndarray) -> np.ndarray:
+        """Normalize image using CLAHE."""
+        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+        l, a, b = cv2.split(lab)
+
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l = clahe.apply(l)
+
+        img = cv2.merge((l, a, b))
+        return cv2.cvtColor(img, cv2.COLOR_LAB2RGB)
+
+    @staticmethod
     def find_card_contour(
         frame: np.ndarray,
         epsilon_factor: float = 0.05,
         min_area_ratio: float = 0.5,
-    ) -> cv2.typing.MatLike:
+    ) -> cv2.typing.MatLike | None:
         """Detect card contour on an image and keep only those that are rectangular-like and cover most of the image.
 
         Args:
@@ -38,6 +50,7 @@ class ImageProcesser:
             total_pixels = thresh.shape[0] * thresh.shape[1]
             return non_zero_pixels / total_pixels
 
+        frame = ImageProcesser._normalize_image(frame)
         image_area = frame.shape[0] * frame.shape[1]
         min_area = image_area * min_area_ratio
 
