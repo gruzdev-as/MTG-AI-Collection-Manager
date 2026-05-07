@@ -1,6 +1,8 @@
 import asyncio
 import datetime
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 import httpx
 from httpcore import TimeoutException
@@ -9,6 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.prices.config import ScryfallConfig
 from common.db.models import Card, CardPrice, Collection
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import CursorResult
 
 cfg = ScryfallConfig()
 
@@ -20,7 +25,7 @@ def _to_float(value: str | None) -> float | None:
         return None
 
 
-def _batched(lst: list[str], size: int) -> AsyncGenerator[list[str]]:
+def _batched(lst: list[UUID], size: int) -> Generator:
     for i in range(0, len(lst), size):
         yield lst[i : i + size]
 
@@ -43,7 +48,7 @@ async def sync_all_prices(db: AsyncSession) -> int:
     Inserts one CardPrice row per owned card. Returns the number of rows inserted.
     """
     owned_card_id_query = select(Card.id).where(Card.id.in_(select(Collection.card_id).distinct()))
-    card_id: list = list(await db.scalars(owned_card_id_query))
+    card_id: list[UUID] = list(await db.scalars(owned_card_id_query))
 
     if not card_id:
         print("Price sync: collection is empty, nothing to fetch.")
@@ -94,7 +99,7 @@ async def sync_if_stale(db: AsyncSession) -> int:
 
     Called on application startup to avoid hammering Scryfall after quick restarts.
     """
-    last_sync: datetime | None = await db.scalar(
+    last_sync: datetime.datetime | None = await db.scalar(
         select(CardPrice.fetched_at).order_by(CardPrice.fetched_at.desc()).limit(1),
     )
 
@@ -120,7 +125,8 @@ async def cleanup_old_prices(db: AsyncSession) -> int:
     Called after each daily sync to keep the history table bounded.
     """
     cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=cfg.retention_days)
-    result = await db.execute(delete(CardPrice).where(CardPrice.fetched_at < cutoff))
+    stmt = delete(CardPrice).where(CardPrice.fetched_at < cutoff)
+    result = cast("CursorResult[Any]", await db.execute(stmt))
     await db.commit()
 
     if result.rowcount:
