@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 
 import numpy as np
 import torch
 from transformers import AutoImageProcessor, AutoModel, DINOv3ViTModel
 from transformers import DINOv3ViTImageProcessorFast as DINOv3ViTImageProcessor
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingGenerator:
@@ -14,7 +17,7 @@ class EmbeddingGenerator:
         self.processor: DINOv3ViTImageProcessor = AutoImageProcessor.from_pretrained(model_path, local_files_only=True)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
-        print("Model has loaded")
+        logger.info("Model has loaded")
 
     @torch.inference_mode()
     def generate_image_embedding(self, images: np.ndarray) -> np.ndarray:

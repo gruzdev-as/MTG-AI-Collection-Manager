@@ -12,16 +12,12 @@ from common.init.constants import (
     MODEL_DATA_PATH,
     SCRYFALL_DATA_PATH,
 )
+from common.logging.logging import setup_logging
 from init.populate_cards import populate_cards
 from init.scryfall_data_downloader import download_bulk_data, parse_metadata
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = logging.getLogger("init.main")
 
 
 def create_volume_dirs() -> None:

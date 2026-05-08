@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import CursorResult
 
 cfg = ScryfallConfig()
+logger = logging.getLogger(__name__)
 
 
 def _to_float(value: str | None) -> float | None:
@@ -51,11 +53,11 @@ async def sync_all_prices(db: AsyncSession) -> int:
     card_id: list[UUID] = list(await db.scalars(owned_card_id_query))
 
     if not card_id:
-        print("Price sync: collection is empty, nothing to fetch.")
+        logger.info("Price sync: collection is empty, nothing to fetch.")
         return 0
 
     batches = list(_batched(card_id, cfg.batch_size))
-    print(f"Price sync: {len(card_id)} cards → {len(batches)} batches of {cfg.batch_size}.")
+    logger.info("Price sync: %s cards → %s batches of %s.", len(card_id), len(batches), cfg.batch_size)
 
     new_rows: list[CardPrice] = []
     fetch_time = datetime.datetime.now(datetime.UTC)
@@ -74,15 +76,20 @@ async def sync_all_prices(db: AsyncSession) -> int:
                         price_data = card_data.get("prices", {})
                         new_rows.append(_form_card_data(card_data, price_data, fetch_time))
 
-                    print(f"Price sync: batch {idx}/{len(batches)} OK.")
+                    logger.info("Price sync: batch %s OK.", idx / len(batches))
                     success = True
                 except TimeoutException:
                     attempt += 1
                     wait = attempt * 2.0
-                    print(f"Price sync: batch {idx}/{len(batches)} attempt {attempt} failed, retrying in {wait}s.")
+                    logger.info(
+                        "Price sync: batch %s attempt %s failed, retrying in %ss.",
+                        idx / len(batches),
+                        attempt,
+                        wait,
+                    )
                     await asyncio.sleep(wait)
             if not success:
-                print(f"Price sync: batch {idx}/{len(batches)} failed after {cfg.retry_attempts} attempts.")
+                print("Price sync: batch %s failed after %s attempts.", idx / len(batches), cfg.retry_attempts)
             if idx < len(batches):
                 await asyncio.sleep(cfg.rate_limit_delay)
 
@@ -90,7 +97,7 @@ async def sync_all_prices(db: AsyncSession) -> int:
         db.add_all(new_rows)
         await db.commit()
 
-    print(f"Price sync: inserted {len(new_rows)} price records.")
+    logger.info("Price sync: inserted %s price records.", len(new_rows))
     return len(new_rows)
 
 
@@ -104,7 +111,7 @@ async def sync_if_stale(db: AsyncSession) -> int:
     )
 
     if last_sync is None:
-        print("Price sync: no price data found. Starting sync.")
+        logger.info("Price sync: no price data found. Starting sync.")
         return await sync_all_prices(db)
 
     if last_sync.tzinfo is None:
@@ -112,10 +119,10 @@ async def sync_if_stale(db: AsyncSession) -> int:
 
     age = datetime.datetime.now(datetime.UTC) - last_sync
     if age < datetime.timedelta(hours=cfg.stale_threshold_hours):
-        print(f"Price sync skipped on startup: last sync was {age.total_seconds() / 3600:.1f} hours ago.")
+        logger.info("Price sync skipped on startup: last sync was %.1f hours ago.", age.total_seconds() / 3600)
         return 0
 
-    print(f"Price sync: starting startup sync (last sync >= {cfg.stale_threshold_hours} hours ago.")
+    logger.info("Price sync: starting startup sync (last sync >= %s) hours ago.", cfg.stale_threshold_hours)
     return await sync_all_prices(db)
 
 
@@ -130,5 +137,5 @@ async def cleanup_old_prices(db: AsyncSession) -> int:
     await db.commit()
 
     if result.rowcount:
-        print(f"Price cleanup: removed {result.rowcount} records older than {cfg.retention_days} days.")
+        logger.info("Price cleanup: removed %s records older than %s days.", result.rowcount, cfg.retention_days)
     return result.rowcount

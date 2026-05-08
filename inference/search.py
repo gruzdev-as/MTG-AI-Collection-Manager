@@ -1,10 +1,12 @@
 import json
+import logging
 from pathlib import Path
 from typing import Literal
 
 import hnswlib
 from numpy import ndarray
 
+logger = logging.getLogger(__name__)
 
 class HNSWSearchTool:
     """Nearest neigbour searching tool."""
@@ -24,7 +26,7 @@ class HNSWSearchTool:
         with Path(index_json_path).open("r") as f:
             self.image_metadata = json.load(f)
 
-        print("Search Engine has loaded")
+        logger.info("Search Engine has loaded")
 
     def search_in_hnsw(self, query_embedding: ndarray) -> list[dict[str, str]]:
         """Use hnsw index to retrieval info."""
