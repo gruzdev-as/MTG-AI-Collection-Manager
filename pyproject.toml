@@ -16,6 +16,7 @@ ignore = [
   "D107",
   "D100",
   "INP001",
+  "D104",
 ] # Optional: Add rules to ignore, e.g., ["E501"]
 
 # Line length

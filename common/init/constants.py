@@ -1,19 +1,20 @@
+import os
 from pathlib import Path
 
 # Model data
-MODEL_DATA_PATH = Path("data/CLIP")
-CLIP_MODEL_NAME = "openai/clip-vit-large-patch14-336"
+MODEL_PATH = Path(os.getenv("MODEL_PATH", ""))
+MODEL_NAME = os.getenv("MODEL_NAME", "")
 
 # HNSW lib data
-HNSWL_DATA_PATH = Path("data/hnsw")
-HNSW_FILES_LINK = "https://drive.google.com/drive/folders/1FNOtY4-KcdIrOxSsqdGszScTwIKx8Tkk?usp=sharing"
-INDEX_FILE = HNSWL_DATA_PATH / "hnsw_index_cos.bin"
-MAPPING_FILE = HNSWL_DATA_PATH / "image_metadata.json"
+HNSW_PATH = Path(os.getenv("HNSWL_DATA_PATH", ""))
+HNSW_FILES_LINK = os.getenv("HNSW_FILES_LINK", "")
+INDEX_FILE = HNSW_PATH / os.getenv("HNSW_INDEX_NAME", "")
+MAPPING_FILE = HNSW_PATH / os.getenv("HNSW_JSON_NAME", "")
 
 # Card data
-SCRYFALL_DATA_PATH = Path("data/scryfall")
+SCRYFALL_DATA_PATH = Path(os.getenv("SCRYFALL_DATA_PATH", ""))
 ALL_CARDS_JSON = SCRYFALL_DATA_PATH / "all_cards.json"
 CARDS_METADATA_PARQUET = SCRYFALL_DATA_PATH / "cards_metadata.parquet"
 
 # Crop data
-CROP_DATA_PATH = Path("data/crops")
+CROP_DATA_PATH = Path(os.getenv("CROP_DATA_PATH", ""))

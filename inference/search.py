@@ -8,22 +8,23 @@ from numpy import ndarray
 
 logger = logging.getLogger(__name__)
 
+
 class HNSWSearchTool:
     """Nearest neigbour searching tool."""
 
     def __init__(
         self,
+        hnsw_index_path: Path,
+        hnsw_json_path: Path,
         index_dim: int,
         index_space: Literal["cosine", "l2"],
-        index_path: Path,
         index_ef: int,
-        index_json_path: Path,
     ) -> None:
         self.hnsw_index = hnswlib.Index(space=index_space, dim=index_dim)
-        self.hnsw_index.load_index(str(index_path))
+        self.hnsw_index.load_index(str(hnsw_index_path))
         self.hnsw_index.set_ef(index_ef)
 
-        with Path(index_json_path).open("r") as f:
+        with Path(hnsw_json_path).open("r") as f:
             self.image_metadata = json.load(f)
 
         logger.info("Search Engine has loaded")

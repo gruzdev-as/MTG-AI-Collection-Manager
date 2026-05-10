@@ -15,8 +15,8 @@ class InferenceConfig:
 class HNSWConfig:
     """Configure HNSW index."""
 
-    index_path: Path = Path(os.getenv("HNSW_INDEX_PATH", ""))
-    index_json_path: Path = Path(os.getenv("HNSW_JSON_PATH", ""))
+    hnsw_index_path: Path = Path(os.getenv("HNSW_PATH", "")) / os.getenv("HNSW_INDEX_NAME", "")
+    hnsw_json_path: Path = Path(os.getenv("HNSW_PATH", "")) / os.getenv("HNSW_JSON_NAME", "")
     index_dim: int = int(os.getenv("HNSW_INDEX_DIM", "768"))
     index_space: Literal["l2", "cosine"] = os.getenv("HNSW_INDEX_SPACE", "cosine")
-    index_ef: int = int(os.getenv("HNSW_INDEX_EF", "cosine"))
+    index_ef: int = int(os.getenv("HNSW_INDEX_EF", "1000"))
