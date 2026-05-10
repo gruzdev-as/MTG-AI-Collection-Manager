@@ -16,3 +16,10 @@ data/
 
 # IDE
 .vscode/
+
+#experiments
+notebooks/
+.hf_cache/
+
+#MAC
+.DS_Store

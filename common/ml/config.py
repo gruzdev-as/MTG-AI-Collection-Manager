@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -7,15 +8,15 @@ from typing import Literal
 class InferenceConfig:
     """Configure inference."""
 
-    model_path: Path = Path("inference/data/CLIP")
+    model_path: Path = Path(os.getenv("MODEL_PATH", ""))
 
 
 @dataclass(frozen=True)
 class HNSWConfig:
     """Configure HNSW index."""
 
-    index_path: Path = Path("inference/data/hnsw/hnsw_index_cos.bin")
-    index_json_path: Path = Path("inference/data/hnsw/image_metadata.json")
-    index_dim: int = 768
-    index_space: Literal["cosine", "l2"] = "cosine"
-    index_ef: int = 100
+    hnsw_index_path: Path = Path(os.getenv("HNSW_PATH", "")) / os.getenv("HNSW_INDEX_NAME", "")
+    hnsw_json_path: Path = Path(os.getenv("HNSW_PATH", "")) / os.getenv("HNSW_JSON_NAME", "")
+    index_dim: int = int(os.getenv("HNSW_INDEX_DIM", "768"))
+    index_space: Literal["l2", "cosine"] = os.getenv("HNSW_INDEX_SPACE", "cosine")
+    index_ef: int = int(os.getenv("HNSW_INDEX_EF", "1000"))

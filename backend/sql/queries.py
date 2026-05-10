@@ -1,13 +1,17 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
-from sqlalchemy import Select, case, delete, func, select, true, update
+from sqlalchemy import case, delete, func, select, true, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.sql.selectable import LateralFromClause
 
 from common.db.models import Card, CardPrice, Collection
 from common.schemas.api import AddedCard, CollectionItemResponse, PaginatedCollection, UpdateCollectionItem
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import CursorResult
 
 
 def _aggregate_cards_data(cards_data: list[AddedCard]) -> list[dict[str, Any]]:
@@ -27,7 +31,7 @@ def _aggregate_cards_data(cards_data: list[AddedCard]) -> list[dict[str, Any]]:
     return list(aggregated.values())
 
 
-def _get_latest_price_subquery() -> Select:
+def _get_latest_price_subquery() -> LateralFromClause:
     """Return a lateral subquery that fetches the most recent price for a card."""
     price_alias = aliased(CardPrice)
     return (
@@ -40,7 +44,7 @@ def _get_latest_price_subquery() -> Select:
     )
 
 
-def _get_sorting_clause(sort_by: str, order: str, latest_price_subq: Select) -> ColumnElement:
+def _get_sorting_clause(sort_by: str, order: str, latest_price_subq: LateralFromClause) -> ColumnElement:
     """Construct the ORDER BY clause based on user input."""
     rarity_weight = case(
         {"mythic": 1, "rare": 2, "uncommon": 3, "common": 4},
@@ -63,31 +67,28 @@ def _get_sorting_clause(sort_by: str, order: str, latest_price_subq: Select) -> 
     return sort_col.desc() if order == "desc" else sort_col.asc()
 
 
-async def _get_total_portfolio_value(db: AsyncSession, latest_price_subq: Select) -> tuple[float, float]:
+async def _get_total_portfolio_value(db: AsyncSession, latest_price_subq: LateralFromClause) -> tuple[float, float]:
     """Calculate the total USD and EUR value of the entire collection."""
+    price_usd_stmt = Collection.quantity * case(
+        (Collection.is_foil, latest_price_subq.c.price_usd_foil),
+        else_=latest_price_subq.c.price_usd,
+    ).label("total_usd")
+
+    price_eur_stmt = Collection.quantity * case(
+        (Collection.is_foil, latest_price_subq.c.price_eur_foil),
+        else_=latest_price_subq.c.price_eur,
+    ).label("total_eur")
+
     total_val_stmt = (
-        select(
-            func.sum(
-                Collection.quantity
-                * case(
-                    (Collection.is_foil, latest_price_subq.c.price_usd_foil),
-                    else_=latest_price_subq.c.price_usd,
-                ),
-            ).label("total_usd"),
-            func.sum(
-                Collection.quantity
-                * case(
-                    (Collection.is_foil, latest_price_subq.c.price_eur_foil),
-                    else_=latest_price_subq.c.price_eur,
-                ),
-            ).label("total_eur"),
-        )
+        select(func.sum(price_usd_stmt), func.sum(price_eur_stmt))
         .select_from(Collection)
         .join(Card, Collection.card_id == Card.id)
         .outerjoin(latest_price_subq, true())
     )
+
     val_result = await db.execute(total_val_stmt)
-    total_usd, total_eur = val_result.first()
+    row = val_result.first() or (0.0, 0.0)
+    total_usd, total_eur = row
     return total_usd or 0.0, total_eur or 0.0
 
 
@@ -152,7 +153,6 @@ async def get_paginated_collection(
             card_number=card_row.card_number,
             card_language=card_row.card_language,
             card_rarity=card_row.card_rarity,
-            card_image_url=card_row.card_image_url,
             is_foil=collection_row.is_foil,
             card_condition=collection_row.card_condition,
             quantity=collection_row.quantity,
@@ -188,13 +188,13 @@ async def update_collection_item(db: AsyncSession, collection_id: int, updates: 
         .values(**update_data)
         .execution_options(synchronize_session=False)
     )
-    result = await db.execute(stmt)
+    result = cast("CursorResult[Any]", await db.execute(stmt))
     await db.commit()
     return result.rowcount > 0
 
 
 async def delete_collection_item(db: AsyncSession, collection_id: int) -> bool:
     stmt = delete(Collection).where(Collection.collection_id == collection_id)
-    result = await db.execute(stmt)
+    result = cast("CursorResult[Any]", await db.execute(stmt))
     await db.commit()
     return result.rowcount > 0

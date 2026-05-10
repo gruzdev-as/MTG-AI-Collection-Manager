@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from backend.prices.syncer import cleanup_old_prices, sync_all_prices, sync_if_stale
-from common.db.session import get_db
+from common.db.session import AsyncSessionLocal
 
 
 def build_scheduler() -> AsyncIOScheduler:
@@ -13,7 +13,7 @@ def build_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
 
     async def _daily_sync() -> None:
-        async for db in get_db():
+        async with AsyncSessionLocal() as db:
             await sync_all_prices(db)
             await cleanup_old_prices(db)
 
@@ -26,8 +26,7 @@ async def start_price_engine() -> AsyncIOScheduler:
     scheduler = build_scheduler()
     scheduler.start()
 
-    async for db in get_db():
+    async with AsyncSessionLocal() as db:
         await sync_if_stale(db)
-        break
 
     return scheduler

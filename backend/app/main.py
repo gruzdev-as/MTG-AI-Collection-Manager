@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 import uuid
 from collections.abc import AsyncGenerator
@@ -17,9 +18,13 @@ from backend.sql import queries
 from backend.vision.image_processor import ImageProcesser
 from common.db.models import Base
 from common.db.session import engine, get_db
+from common.logging.logging import setup_logging
 from common.redis.client import REDIS
 from common.redis.config import StreamConfig
 from common.schemas.api import AddedCard, EmbeddingTask, PaginatedCollection, UpdateCollectionItem
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -77,7 +82,7 @@ async def get_scan_result(frame_id: str) -> JSONResponse:
 async def add_cards_to_collection(cards: list[AddedCard], db: Annotated[AsyncSession, Depends(get_db)]) -> JSONResponse:
     """Commit scanned cards to the persistent database collection."""
     inserted_count = await queries.bulk_add_cards(db, cards)
-    print(f"Successfully added {inserted_count} cards to the database.")
+    logger.info("Successfully added %s cards to the database.", inserted_count)
     return JSONResponse(status_code=200, content={"status": "success", "inserted": inserted_count})
 
 

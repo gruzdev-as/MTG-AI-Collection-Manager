@@ -6,10 +6,15 @@ services:
       args:
         TORCH_BACKEND: cpu
     environment:
-      PYTHONUNBUFFERED: 1
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      MODEL_PATH: ${MODEL_PATH}
+      MODEL_NAME: ${MODEL_NAME}
+      HNSW_FILES_LINK: ${HNSW_FILES_LINK}
+      HNSW_PATH: ${HNSW_PATH}
+      SCRYFALL_DATA_PATH: ${SCRYFALL_DATA_PATH}
+      CROP_DATA_PATH: ${CROP_DATA_PATH}
       HF_HUB_DISABLE_PROGRESS_BAR: 1
     volumes:
       - .volumes/data:/app/data
@@ -22,7 +27,6 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      PYTHONUNBUFFERED: 1
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -52,9 +56,15 @@ services:
       args:
         TORCH_BACKEND: cpu
     environment:
-      - PYTHONUNBUFFERED=1
+      MODEL_PATH: ${MODEL_PATH}
+      HNSW_PATH: ${HNSW_PATH}
+      HNSW_INDEX_NAME: ${HNSW_INDEX_NAME}
+      HNSW_JSON_NAME: ${HNSW_JSON_NAME}
+      HNSW_INDEX_DIM: ${HNSW_INDEX_DIM}
+      HNSW_INDEX_SPACE: ${HNSW_INDEX_SPACE}
+      HNSW_INDEX_EF: ${HNSW_INDEX_EF}
     volumes:
-      - .volumes/data:/app/inference/data
+      - .volumes/data:/app/data
     depends_on:
       init:
         condition: service_completed_successfully
@@ -62,6 +72,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  
   redis:
     image: redis:7
     restart: unless-stopped
